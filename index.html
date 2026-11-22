@@ -1092,5 +1092,6 @@ renderContext();renderCcy();renderDays();renderTriggers();renderCompanies();rend
 loadLive();loadSite();
 (async()=>{try{if(window.claude&&window.claude.use){const s=await window.claude.use("sample");if(s){sampleFn=s;document.querySelectorAll("[data-ai-wrap]").forEach(e=>e.hidden=false);if(compQuery)renderCompanies();}}}catch(e){}})();
 </script>
+<script>if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});</script>
 </body>
 </html>
