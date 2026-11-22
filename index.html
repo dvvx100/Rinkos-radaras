@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rinkos naujienų radaras</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap&subset=latin-ext" rel="stylesheet">
+<style>
+/* Layout: viršuje režimo jungiklis ir skirtukai; kalendorius dienomis, eilutė išsiskleidžia į trumpą kortelę; įmonės – kortelių sąrašas; testas – suvestinė + lentelės. */
+:root{
+  --bg:#f3f4f1; --panel:#ffffff; --ink:#16201d; --muted:#5d6a66; --line:#dde1dc;
+  --accent:#1f5fbf; --accent-soft:#e3ecfa; --bull:#147a4a; --bull-soft:#dcf1e6; --bear:#b3322a; --bear-soft:#f8e1de; --warn:#a86a00;
+  --font-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --font-body:"IBM Plex Sans","Segoe UI",Roboto,Arial,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#0f1517;--panel:#172024;--ink:#e7ece9;--muted:#93a19c;--line:#2a363a;--accent:#7aa8f2;--accent-soft:#1c2b44;--bull:#4cc58a;--bull-soft:#15342a;--bear:#f07a70;--bear-soft:#3c1f1d;--warn:#e2a84a;color-scheme:dark;}
+}
+:root[data-theme="dark"]{--bg:#0f1517;--panel:#172024;--ink:#e7ece9;--muted:#93a19c;--line:#2a363a;--accent:#7aa8f2;--accent-soft:#1c2b44;--bull:#4cc58a;--bull-soft:#15342a;--bear:#f07a70;--bear-soft:#3c1f1d;--warn:#e2a84a;color-scheme:dark;}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5}
+a{color:var(--accent)}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 60px;display:flex;flex-direction:column;gap:16px}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--font-display);font-weight:800;font-size:28px;margin:0;text-wrap:balance}
+h2{font-family:var(--font-display);font-weight:700;font-size:19px;margin:0;text-wrap:balance}
+h3{font-family:var(--font-display);font-weight:700;font-size:13px;margin:0 0 6px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.sub{color:var(--muted);font-size:13.5px;margin-top:4px}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.bar-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:var(--panel);padding:7px 13px;border-radius:7px;cursor:pointer;font-weight:500}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.regime{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:6px 8px;flex-wrap:wrap}
+.regime .lbl{font-size:12.5px;color:var(--muted);padding-left:4px}
+.seg{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:5px 10px;cursor:pointer;font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.context{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.ctx{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+.ctx .k{font-size:12px;color:var(--muted)} .ctx .v{font-family:var(--font-mono);font-size:19px;font-weight:500} .ctx .n{font-size:12px;color:var(--muted)}
+.notice{background:var(--accent-soft);border-radius:9px;padding:10px 14px;font-size:13.5px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.day{background:var(--panel);border:1px solid var(--line);border-radius:11px;overflow:hidden}
+.dayhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--panel) 85%,var(--line))}
+.dayhead .h{font-family:var(--font-display);font-weight:700;font-size:16px} .dayhead .note{font-size:12.5px;color:var(--muted)}
+.row{display:grid;grid-template-columns:70px 52px 40px 1fr 128px;gap:10px;align-items:center;padding:9px 14px;border:0;border-bottom:1px solid var(--line);cursor:pointer;background:none;text-align:left;width:100%}
+.row:hover{background:color-mix(in srgb,var(--panel) 92%,var(--accent))}
+.row[aria-expanded="true"]{background:var(--accent-soft)}
+.row .t{font-family:var(--font-mono);font-size:13px}
+.ccy{font-family:var(--font-mono);font-size:12px;font-weight:500;border:1px solid var(--line);border-radius:5px;padding:2px 6px;text-align:center}
+.imp{display:flex;gap:2px} .imp i{width:7px;height:14px;border-radius:2px;background:var(--line);display:block}
+.imp.l3 i{background:var(--bear)} .imp.l2 i:nth-child(-n+2){background:var(--warn)} .imp.l1 i:nth-child(1){background:var(--muted)}
+.row .ttl{font-weight:500} .row .ttl small{display:block;color:var(--muted);font-weight:400;font-size:12.5px}
+.pill{font-family:var(--font-mono);font-size:12.5px;border-radius:6px;padding:4px 8px;text-align:center;white-space:nowrap}
+.pill.up{background:var(--bull-soft);color:var(--bull)} .pill.dn{background:var(--bear-soft);color:var(--bear)} .pill.flat{background:var(--line);color:var(--ink)}
+.detail{padding:16px 14px 18px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:18px;background:var(--panel)}
+.col{display:flex;flex-direction:column;gap:16px} section{display:flex;flex-direction:column;gap:6px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:12px} td.num,th.num{text-align:right}
+.bul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:13.5px}
+.instr{display:flex;flex-wrap:wrap;gap:6px} .instr span{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);border-radius:5px;padding:2px 7px}
+.scen{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.scen div{border-radius:8px;padding:8px 10px;font-size:13.5px}
+.scen .hot{background:var(--bear-soft)} .scen .cool{background:var(--bull-soft)}
+.scen b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.gauge{display:grid;grid-template-columns:100px 1fr 40px;gap:10px;align-items:center;font-size:13.5px}
+.gauge .name{font-family:var(--font-mono);font-size:12.5px}
+.gbar{position:relative;height:12px;border-radius:6px;background:linear-gradient(90deg,var(--bear) 0%,var(--bear-soft) 38%,var(--line) 50%,var(--bull-soft) 62%,var(--bull) 100%)}
+.gbar .m{position:absolute;top:-4px;width:4px;height:20px;border-radius:2px;background:var(--ink);transform:translateX(-2px)}
+.gauge .sc{font-family:var(--font-mono);font-weight:500;text-align:right}
+.why{font-size:12.5px;color:var(--muted);grid-column:2 / 4;margin-top:-4px}
+.comp{display:flex;flex-direction:column;gap:3px;font-size:13px;margin-top:6px}
+.comp div{display:grid;grid-template-columns:40px 1fr;gap:8px}
+.comp .d{font-family:var(--font-mono);text-align:right} .p{color:var(--bull)} .n{color:var(--bear)} .z{color:var(--muted)}
+.conf{font-size:12.5px;color:var(--muted)}
+.calc{border:1px dashed var(--line);border-radius:9px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.inp{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.inp label{font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.inp input,.inp select{font-family:var(--font-mono);font-size:14px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:120px}
+.inp select{width:auto;font-family:var(--font-body)}
+.btn{border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:7px;padding:7px 12px;cursor:pointer;font-weight:500}
+.btn.ghost{background:transparent;color:var(--accent)} .btn:disabled{opacity:.55;cursor:default}
+.ai{background:var(--accent-soft);border-radius:9px;padding:10px 12px;font-size:13.5px;white-space:pre-wrap}
+details{font-size:13.5px} details summary{cursor:pointer;color:var(--accent);font-weight:500}
+details[open] summary{margin-bottom:6px}
+.src{display:flex;flex-direction:column;gap:3px;font-size:13px}
+.empty{padding:14px;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
+.pa{border:1px solid var(--line);border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.pa-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.pa-p{font-family:var(--font-mono);font-size:18px;font-weight:600}
+.pa-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.pa-grid h4,.card h4{margin:0 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}.pa-grid p{margin:0 0 4px;font-size:13.5px}
+@media (max-width:520px){.pa-grid{grid-template-columns:1fr}}
+.dist{display:flex;height:7px;border-radius:4px;overflow:hidden;gap:1px;margin:4px 0 2px}
+.stale{font-size:11.5px;background:#f6e7c8;color:#7a5200;border-radius:5px;padding:2px 6px}
+.tup{color:var(--bull)}.tdn{color:var(--bear)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.card .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.card .nm{font-family:var(--font-display);font-weight:700;font-size:17px} .card .tk{font-family:var(--font-mono);font-size:12.5px;color:var(--muted)}
+.verdict{font-size:13.5px;border-radius:7px;padding:6px 10px}.verdict.up{background:var(--bull-soft);color:var(--bull)}.verdict.dn{background:var(--bear-soft);color:var(--bear)}.verdict.flat{background:var(--line)}
+.pc{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}@media (max-width:500px){.pc{grid-template-columns:1fr}}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px} .kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--font-mono)}
+.bt-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.bt-sum .ctx .v{font-size:22px}
+.tablewrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:11px}
+.tablewrap table{min-width:760px} .tablewrap td,.tablewrap th{padding:7px 10px}
+.ok{color:var(--bull);font-weight:600} .bad{color:var(--bear);font-weight:600} .na{color:var(--muted)}
+.method{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.method p,.method li{max-width:72ch;margin:0} .method ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.flag{font-size:11.5px;color:var(--warn)}
+footer{font-size:12.5px;color:var(--muted);max-width:90ch}
+[hidden]{display:none !important}
+@media (max-width:860px){
+  .row{grid-template-columns:56px 48px 1fr 100px} .row .imp{display:none}
+  .detail{grid-template-columns:1fr} .scen{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:no-preference){.row{transition:background .12s}}
+</style>
+<link rel="icon" href="radaras.ico">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#0e1c30">
+<meta name="description" content="Rinkos naujienų radaras: ekonominis kalendorius, įmonių ataskaitos, kripto, analitikų konsensusai">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Rinkos naujienų radaras</h1>
+      <div class="sub"><span id="weekLabel">Lapkričio 23–27 d.</span> · Vilniaus laikas · Duomenys <span id="dataDate">2026-11-22</span></div>
+    </div>
+    <div class="regime" role="group" aria-label="Fed režimas">
+      <span class="lbl">Ko bijo rinka:</span>
+      <div class="seg">
+        <button id="reg-inf" data-reg="inf" aria-pressed="true" title="Fed kelia arba kovoja su infliacija: stiprūs duomenys akcijoms blogi">Infliacijos (Fed kelia)</button>
+        <button id="reg-aug" data-reg="aug" aria-pressed="false" title="Fed mažina: stiprūs duomenys akcijoms geri">Lėtėjimo (Fed mažina)</button>
+      </div>
+    </div>
+  </header>
+  <nav class="tabs" role="tablist" aria-label="Skiltys">
+    <button class="tab" role="tab" id="tab-kalendorius" aria-selected="true" data-view="kalendorius">Kalendorius</button>
+    <button class="tab" role="tab" id="tab-imones" aria-selected="false" data-view="imones">Įmonės</button>
+    <button class="tab" role="tab" id="tab-kripto" aria-selected="false" data-view="kripto">Kripto</button>
+    <button class="tab" role="tab" id="tab-testas" aria-selected="false" data-view="testas">Testas: 5 metai</button>
+    <button class="tab" role="tab" id="tab-metodas" aria-selected="false" data-view="metodas">Kaip naudotis</button>
+  </nav>
+
+  <main id="view-kalendorius">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="context" id="context"></div>
+      <div class="notice"><b>Balas 0–100</b> = tikimybė, kad instrumentas <b>kils</b> per kelias valandas po naujienos. 50 – nežinia. <b>Prieš naujieną balas silpnas</b>, todėl tikroji nauda yra po paskelbimo: įvesk faktą ir gausi kryptį. Per 5 metus po CPI staigmenų S&amp;P 500 kryptis pasitvirtino <b id="cpiHit">–</b> atvejų.</div>
+      <div class="filters" role="group" aria-label="Filtrai">
+        <button class="chip" data-imp="3" aria-pressed="false">Tik svarbiausios</button>
+        <button class="chip" data-imp="2" aria-pressed="true">Svarbios</button>
+        <button class="chip" data-imp="0" aria-pressed="false">Visos</button>
+        <span id="ccyChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-left:8px"></span>
+      </div>
+      <div id="days" style="display:flex;flex-direction:column;gap:14px"></div>
+    </div>
+  </main>
+
+  <main id="view-imones" hidden>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="filters" role="search">
+        <label for="compSearch" class="conf" style="display:flex;align-items:center;gap:8px">Ieškoti įmonės
+          <input id="compSearch" list="compList" placeholder="pvz., Nvidia, AAPL, Dell" style="font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink);width:240px"></label>
+        <datalist id="compList"></datalist>
+        <button class="chip" data-cm="major" aria-pressed="true">Pagrindinės pasaulio įmonės</button>
+        <button class="chip" data-cm="week" aria-pressed="false">Artėjančios ataskaitos (šią savaitę)</button>
+        <span class="conf">Kainos atnaujinamos kasdien · <span data-upd>2026-11-22</span></span>
+      </div>
+      <div class="notice" id="compMsg" hidden></div>
+      <div class="notice"><b>Kaip skaityti.</b> Gera įmonė ≠ akcija kils po ataskaitos. Kryptį lemia, ar rezultatai ir ypač <b>prognozė</b> viršys tai, kas jau įkainota. Paspausk <b>„Kodėl…?“</b> – matysi, kas gerai, kas kelia riziką ir kurie trigeriai lemia signalą.</div>
+      <div class="method" id="trigBox"></div>
+      <div class="cards" id="cards"></div>
+    </div>
+  </main>
+
+  <main id="view-kripto" hidden>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="notice"><b>Bitcoin ir Solana.</b> Balas 0–100 rodo trumpalaikį (1–2 sav.) polinkį: virš 55 – kilti, žemiau 45 – kristi. Kriptovaliutos dabar juda kartu su Nasdaq ir Fed lūkesčiais, todėl svarbiausios naujienos jiems – tos pačios kaip akcijoms (šią savaitę – PCE trečiadienį). Kainos atnaujinamos kartą per dieną, ne realiu laiku. Atnaujinta <b data-upd>2026-11-22</b>.</div>
+      <div class="cards" id="cryptoCards"></div>
+      <p class="conf">Tai nėra investavimo patarimas. Kriptovaliutų svyravimai gali siekti 10–20 % per kelias dienas.</p>
+    </div>
+  </main>
+
+  <main id="view-testas" hidden>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <h2>Ar metodas būtų veikęs? 2021 m. lapkritis – 2026 m. lapkritis</h2>
+        <p class="sub" style="max-width:75ch">Taisyklė: jei skaičius aukščiau ar žemiau konsensuso, kryptis tokia, kokią rodo programa. Tikrinama pagal S&amp;P 500. 2021–2023 m. – visos dienos pokytis; nuo 2023 m. rugpjūčio – pokytis per 30 min. po paskelbimo.</p>
+      </div>
+      <div class="bt-sum" id="sum5"></div>
+      <div class="tablewrap"><table id="per5"></table></div>
+      <div class="notice" style="display:flex;flex-direction:column;gap:6px">
+        <b>Ką tai reiškia</b>
+        <span><b>1. Infliacija (CPI) – patikimiausia.</b> Kai CPI aukščiau prognozės, akcijos dažniausiai krenta; kai žemiau – kyla. Taip buvo daugumoje atvejų per visus 5 metus.</span>
+        <span><b>2. Darbo vietos (NFP) – vos geriau nei monetos metimas.</b> Fed režimo taisyklė padėjo labai nedaug. 2026 m. imtyje skirtumas atrodė didelis, bet per 5 metus jis beveik išnyko. Todėl režimo jungiklį naudok kaip pagalbinį, ne kaip pagrindą.</span>
+        <span><b>3. Kai skaičius atitinka prognozę, rinka dažniausiai juda mažai.</b></span>
+        <span><b>4. Judesiai sumažėjo.</b> 2022 m. CPI diena judindavo S&amp;P 500 vidutiniškai ~1,7 %, dabar per 30 min. – apie 0,5 %. Nasdaq paprastai juda ~1,3–1,5 karto daugiau.</span>
+      </div>
+      <details><summary>Visos CPI naujienos (5 m.)</summary><div class="tablewrap"><table id="tblCpi"></table></div></details>
+      <details><summary>Visos NFP naujienos (5 m.)</summary><div class="tablewrap"><table id="tblNfp"></table></div></details>
+      <details><summary>Nvidia ataskaitos (5 m.)</summary><div class="tablewrap"><table id="tblNvda"></table></div></details>
+      <details><summary>2026 m. išsamiai: valiutos, Fed posėdžiai, kitos šalys</summary>
+        <div class="bt-sum" id="btSummary" style="margin:8px 0"></div>
+        <div class="tablewrap"><table id="btTable"></table></div>
+      </details>
+      <details><summary>Šaltiniai</summary><div class="src">
+        <a href="https://tradingcipher.com/cpi/" target="_blank" rel="noopener">TradingCipher: CPI ir rinkos reakcija per 30 min.</a>
+        <a href="https://tradingcipher.com/nfp/" target="_blank" rel="noopener">TradingCipher: NFP ir rinkos reakcija per 30 min.</a>
+        <a href="https://squawkflow.com/calendar/cpi-november-2026" target="_blank" rel="noopener">SquawkFlow: S&amp;P 500 CPI dienomis</a>
+        <a href="https://forexfundamentals.com/economic-calendar/us-core-cpi/2023-07-12" target="_blank" rel="noopener">Forex Fundamentals: bazinio CPI konsensusas</a>
+        <a href="https://forexfundamentals.com/economic-calendar/nfp/2023-07-07" target="_blank" rel="noopener">Forex Fundamentals: NFP konsensusas</a>
+        <a href="https://fred.stlouisfed.org/series/SP500" target="_blank" rel="noopener">FRED: S&amp;P 500 uždarymo kainos</a>
+        <a href="https://www.alphaquery.com/stock/NVDA/earnings-history" target="_blank" rel="noopener">AlphaQuery: Nvidia EPS istorija</a>
+        <a href="https://www.simianx.ai/stories/nvda-after-earnings-every-reaction-since-2016" target="_blank" rel="noopener">SimianX: Nvidia reakcijos po ataskaitų</a>
+        <a href="https://www.alphaquery.com/stock/DELL/earnings-history" target="_blank" rel="noopener">AlphaQuery: Dell EPS istorija</a>
+        <a href="https://tools.optionsai.com/companies/DELL/earnings/neutral-trades/SHORT_IRON_BUTTERFLY" target="_blank" rel="noopener">OptionsAI: Dell reakcijos po ataskaitų</a>
+        <a href="https://www.axios.com/2025/07/29/wall-street-earnings-alphabet" target="_blank" rel="noopener">Axios/BofA: prognozės poveikis</a>
+      </div></details>
+    </div>
+  </main>
+
+  <main id="view-metodas" hidden>
+    <div class="method">
+      <h2>Kaip naudotis</h2>
+      <ul>
+        <li><b>Prieš naujieną</b> pasižiūrėk konsensusą ir scenarijus „jei aukščiau“ / „jei žemiau“. Balas prieš naujieną yra tik silpnas polinkis: išankstiniai ženklai teste pataikė maždaug pusę kartų.</li>
+        <li><b>Po naujienos</b> įvesk faktinį skaičių. Balas = 50 + kryptis × nuokrypis × 18, ribose 10–90. Nuokrypis matuojamas įprastais nuokrypiais, pvz., CPI m/m: 0,1 p. p., NFP: ~75 tūkst.</li>
+        <li><b>Fed režimas</b> (viršuje) keičia, kaip stiprūs augimo duomenys (NFP, PMI, nuotaikos) veikia akcijas. Dabar rinka bijo infliacijos, nes Fed gruodį tikimasi kelti, todėl stiprūs duomenys akcijoms laikomi blogais. Kai Fed pradės mažinti, perjunk.</li>
+        <li><b>Įmonės</b>: balas = prieš ataskaitą žinomi trigeriai (pusė svorio) + pelno viršijimas (&gt;10 % → +12, 0–10 % → −4, nepasiekė → −10) + prognozė (±20) + pajamų nuokrypis (iki ±8). Įkainotas judesys (pvz., ±7 %) parodo, kiek rinka tikisi, kad akcija pajudės bet kuria kryptimi.</li>
+        <li><b>DI santrauka</b> – papildoma nuomonė. Ji negali naršyti interneto, todėl remiasi tik kortelės duomenimis.</li>
+        <li><b>Atnaujinimas</b>: puslapis pats negali parsisiųsti naujienų. Kitą savaitę parašyk man „atnaujink“. Visada pasitikrink <a href="https://www.forexfactory.com/calendar" target="_blank" rel="noopener">Forex Factory</a> ir <a href="https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html" target="_blank" rel="noopener">CME FedWatch</a>.</li>
+      </ul>
+    </div>
+  </main>
+
+  <footer>Tai nėra finansinė ar investavimo konsultacija. Balai yra tikimybiniai įvertinimai ir dažnai klysta.</footer>
+</div>
+
+<script>
+const CONTEXT = [
+  {k:"Fed gruodžio 8–9 d.", v:"~99 %", n:"tikimybė kelti 0,25 p. p. (CME FedWatch)"},
+  {k:"Fed palūkanos", v:"3,75–4,00 %", n:"spalio 28 d. palikta, 2 nariai už kėlimą"},
+  {k:"S&P 500 praeitą savaitę", v:"−8,6 %", n:"Nasdaq −10 %, korekcija dėl DI akcijų"},
+  {k:"JAV 10 m. obligacijos", v:"~5 %", n:"pajamingumas aukštas, doleris tvirtas"},
+  {k:"Kiti centriniai bankai", v:"kelia", n:"ECB, BoE ir BoJ tikimasi kėlimų gruodį"}
+];
+
+const SRC = {
+  fxe:{t:"FXEmpire: savaitės apžvalga (PCE, kalendorius)",u:"https://www.fxempire.com/forecasts/article/the-week-ahead-pce-in-focus-after-ai-sell-off-in-holiday-shortened-week-1646337"},
+  nsq:{t:"Newsquawk: Week in Focus, lapkr. 23–27",u:"https://www.newsquawk.com/headlines/week-in-focus--november-23rd-27th-highlights-include-us-pce-flash-pmis-aussie-cpi-and-ecb-minutes"},
+  te:{t:"Trading Economics: Week Ahead – Nov 23rd",u:"https://tradingeconomics.com/calendar?article=29380&importance=2&startdate=2026-11-20"},
+  oxf:{t:"Oxford Economics: US PCE nowcast",u:"https://www.oxfordeconomics.com/resource/us-pce-nowcast-broadening-pressures-lock-in-december-rate-hike/"},
+  usb:{t:"U.S. Bank: Weekly Economic Outlook",u:"https://www.usbank.com/corporate-and-commercial-banking/insights/economy/outlook/weekly.html"},
+  sa:{t:"Seeking Alpha: Wall Street Week Ahead",u:"https://seekingalpha.com/article/4970920-wall-street-week-ahead"},
+  lite:{t:"LiteFinance: savaitės kalendorius",u:"https://www.litefinance.org/blog/analysts-opinions/weekly-economic-calendar-for-23112026-29112026/"},
+  rio:{t:"Rio Times: Key Market Events Nov 23–27",u:"https://www.riotimesonline.com/key-market-events-for-the-week-of-november-23-27-2026/"},
+  rba:{t:"RBA: Statement on Monetary Policy, lapkritis 2026",u:"https://www.rba.gov.au/publications/smp/2026/nov/outlook.html"},
+  ffau:{t:"Forexfundamentals: Australia CPI 2026-11-25",u:"https://forexfundamentals.com/economic-calendar/au-cpi/2026-11-25"},
+  tes:{t:"The Standard: Week Ahead (Azija)",u:"https://www.thestandard.com.hk/finance/article/349273/Week-Ahead-US-PCE-inflation-China-profits-and-Meituan-earnings-test-battered-markets"},
+  ukpmi:{t:"S&P Global: UK flash PMI, spalis 2026",u:"https://www.spglobal.com/market-intelligence/en/news-insights/research/2026/10/uk-flash-pmi-signals-strong-start-to-fourth-quarter-amid-elevated-price-pressures"},
+  stt:{t:"StockTitan: ataskaitų kalendorius",u:"https://www.stocktitan.net/articles/earnings-calendar-week-of-november-23-2026"},
+  ff:{t:"Forex Factory kalendorius (gyvai)",u:"https://www.forexfactory.com/calendar"},
+  fw:{t:"CME FedWatch (gyvai)",u:"https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html"},
+  jorg:{t:"PCE spalio ataskaitos laikas ir istorija",u:"https://jorgai.com/blog/october-2026-pce-report-november-25"}
+};
+
+const EVENTS = [
+  /* PIRMADIENIS 23 */
+  {id:"jp-hol",day:"2026-11-23",time:"visą d.",ccy:"JPY",imp:1,title:"Japonija: šventinė diena",sub:"Japonijos ir Kinijos rinkos uždarytos",
+   cons:[],instr:["USD/JPY","Nikkei 225"],
+   text:"Mažesnis likvidumas Azijos sesijoje. Naujienų nėra.",scores:[],comp:[],conf:"",src:["nsq","tes"]},
+  {id:"eu-pmi",day:"2026-11-23",time:"~11:00",ccy:"EUR",imp:2,title:"Euro zonos ir Vokietijos išankstiniai PMI",sub:"Lapkritis (Prancūzija ~10:15, Vokietija ~10:30, euro zona ~11:00)",
+   cons:[{m:"Euro zona ir Vokietija",c:"skaičių nerasta",p:"—"}],
+   fc:[{w:"Trading Economics",v:"Euro zona plėsis toliau; Vokietija – kiek lėčiau; Prancūzijos smukimas šiek tiek švelnės"},{w:"Newsquawk",v:"Spalį augimas tvirtas, bet tempas silpsta; sąnaudų spaudimas didžiausias nuo gegužės"}],
+   instr:["EUR/USD","DAX","Euro Stoxx 50","Bund 2 m."],
+   text:"Rinka žiūrės ne tik į aktyvumą, bet ir į kainų komponentus. Jei energijos kainų kritimas jau mažina sąnaudas, tai sustiprintų kalbas, kad ECB gruodį gali pasiekti piką. Jei kainų spaudimas išlieka, ECB kėlimo lūkesčiai stiprėja.",
+   scen:{hot:"Aktyvumas ir kainos aukščiau → EUR/USD kyla, Bund pajamingumai kyla.",cool:"Aktyvumas silpnėja → EUR/USD krenta, DAX gali kilti, jei mažėja kėlimų lūkesčiai."},
+   scores:[{a:"EUR/USD",s:47,w:"Tempas silpsta, bet kainų spaudimas palaiko ECB"}],
+   comp:[{d:-3,t:"Newsquawk: augimo tempas silpsta"},{d:0,t:"Konsensuso skaičių nerasta – įvesk iš Forex Factory"}],
+   conf:"Pasitikėjimas: žemas",calc:{label:"Kompozitinis PMI",cons:null,typ:0.8,unit:"",dirs:[{a:"EUR/USD",d:1},{a:"DAX",d:0.4}]},
+   src:["nsq","te","ff"]},
+  {id:"uk-pmi",day:"2026-11-23",time:"~11:30",ccy:"GBP",imp:2,title:"JK išankstiniai PMI",sub:"Lapkritis",
+   cons:[{m:"Kompozitinis",c:"skaičiaus nerasta",p:"52,9 (spalio galutinis; išankstinis 53,1)"}],
+   fc:[{w:"Trading Economics",v:"Paslaugos ir pramonė turėtų toliau plėstis"},{w:"Newsquawk",v:"Svarbiausia – kainų spaudimas: išliekantis spaudimas = BoE kėlimas gruodį, kritimas = vasaris"}],
+   instr:["GBP/USD","EUR/GBP","FTSE 100","Gilt 2 m."],
+   text:"Spalį JK aktyvumas augo greičiausiai nuo vasario, o įvesties kainos kilo tiek pramonėje, tiek paslaugose. Po švelnesnės spalio infliacijos BoE gruodžio kėlimo tikimybė nukrito iki ~70 %, todėl PMI kainų dalis gali ją vėl pakelti arba sumažinti.",
+   scen:{hot:"Stiprus PMI ir kainos → GBP kyla (gruodžio kėlimas tikėtinesnis).",cool:"Silpnas PMI → GBP krenta, dėmesys pereina į vasarį."},
+   scores:[{a:"GBP/USD",s:50,w:"Aiškaus polinkio nėra"}],comp:[{d:0,t:"Spalio stiprumas ir kainų spaudimas jau žinomi"}],conf:"Pasitikėjimas: žemas",
+   calc:{label:"Kompozitinis PMI",cons:null,typ:0.8,unit:"",dirs:[{a:"GBP/USD",d:1},{a:"FTSE 100",d:-0.3}]},src:["nsq","te","ukpmi"]},
+  {id:"us-pmi",day:"2026-11-23",time:"16:45",ccy:"USD",imp:2,title:"JAV S&P Global išankstiniai PMI",sub:"Lapkritis",
+   cons:[{m:"Pramonė",c:"54,5",p:"54,9"},{m:"Paslaugos",c:"55,6",p:"56,1"}],
+   fc:[{w:"Trading Economics",v:"Tikimasi pramonės lėtėjimo"}],
+   instr:["DXY","S&P 500","Nasdaq 100","UST 2 m."],
+   text:"Prognozuojamas nedidelis lėtėjimas abiejuose sektoriuose. Po staigaus akcijų kritimo verslo nuotaikos gali būti silpnesnės. Esant dabartiniam Fed kėlimų režimui, stipresni duomenys akcijoms nebūtinai geri, nes didina palūkanų lūkesčius.",
+   scen:{hot:"Aukščiau prognozės → doleris kyla, akcijoms nedidelis spaudimas.",cool:"Žemiau → doleris silpsta, obligacijų pajamingumai krenta."},
+   scores:[{a:"DXY",s:48,w:"Akcijų kritimas gali slėgti apklausas"},{a:"S&P 500",s:50,w:"Poveikis dviprasmiškas"}],
+   comp:[{d:-2,t:"Praeitos savaitės rinkos kritimas gali sumažinti apklausų rezultatus"},{d:0,t:"Specialistų nuokrypio duomenų nėra"}],
+   conf:"Pasitikėjimas: žemas · poveikis vidutinis",
+   calc:{label:"Paslaugų PMI",cons:55.6,typ:1.0,unit:"",dirs:[{a:"DXY",d:1},{a:"S&P 500",d:-0.4,g:true},{a:"Nasdaq 100",d:-0.5,g:true}]},src:["fxe","te"]},
+  {id:"us-earn-mon",day:"2026-11-23",time:"po uždarymo",ccy:"USD",imp:1,title:"Įmonių ataskaitos: HPE, Zoom, Agilent, Jacobs",sub:"Po JAV prekybos pabaigos (~23:00)",
+   cons:[{m:"HPE EPS",c:"1,28",p:"—"},{m:"Zoom EPS",c:"1,49",p:"—"},{m:"Agilent EPS",c:"1,73",p:"—"}],
+   instr:["HPE","ZM","A","Nasdaq 100"],text:"HPE svarbi kaip DI serverių paklausos indikatorius prieš antradienio Dell ataskaitą.",
+   scores:[],comp:[],conf:"",src:["fxe"]},
+  {id:"williams",day:"2026-11-23",time:"23:00",ccy:"USD",imp:2,title:"Fed: Johno Williamso (NY Fed) kalba",sub:"Vienas įtakingiausių FOMC narių",
+   cons:[],fc:[{w:"FOMC protokolas (Newsquawk)",v:"Williamsas prieš „dramatiškus veiksmus“, Walleris už didesnį žingsnį, Logan nori dar bent dviejų kėlimų"}],
+   instr:["DXY","UST 2 m.","S&P 500"],
+   text:"Rinka svarsto 0,25 ar 0,5 p. p. kėlimą gruodį. Jei Williamsas pakartos, kad nepritaria dideliam žingsniui, rinkos įkainota 0,5 p. p. tikimybė gali mažėti.",
+   scen:{hot:"Užuominos apie 0,5 p. p. → doleris kyla, akcijos krenta.",cool:"Atmeta didelį žingsnį → doleris silpsta, akcijos atsigauna."},
+   scores:[{a:"DXY",s:47,w:"Žinomas kaip nuosaikus balsas"},{a:"S&P 500",s:53,w:"Mažina 0,5 p. p. baimę"}],
+   comp:[{d:-3,t:"Ankstesnė pozicija: prieš „dramatiškus veiksmus“"}],conf:"Pasitikėjimas: žemas",src:["fxe","nsq"]},
+
+  /* ANTRADIENIS 24 */
+  {id:"ifo",day:"2026-11-24",time:"~11:00",ccy:"EUR",imp:2,title:"Vokietijos Ifo verslo klimatas",sub:"Lapkritis",
+   cons:[{m:"Indeksas",c:"tikimasi kilimo 7-ą mėn. iš eilės",p:"—"}],fc:[{w:"Trading Economics",v:"Aukščiausias lygis nuo 2023 m. gegužės"}],
+   instr:["EUR/USD","DAX"],text:"Ifo kyla jau pusę metų. Kitas kilimas jau tikėtinas, todėl reakcija būtų didesnė tik netikėto kritimo atveju.",
+   scen:{hot:"Kyla daugiau nei tikėtasi → EUR ir DAX šiek tiek kyla.",cool:"Netikėtas kritimas → EUR krenta."},
+   scores:[{a:"EUR/USD",s:50,w:"Kilimas jau įkainotas"}],comp:[{d:0,t:"Tendencija žinoma, specialistų nuokrypio nėra"}],conf:"Pasitikėjimas: žemas",
+   calc:{label:"Ifo indeksas",cons:null,typ:0.8,unit:"",dirs:[{a:"EUR/USD",d:0.7},{a:"DAX",d:0.8}]},src:["te","nsq"]},
+  {id:"us-earn-tue-pre",day:"2026-11-24",time:"prieš atidarymą",ccy:"USD",imp:2,title:"Ataskaitos: Analog Devices, Best Buy, Dollar Tree, Medtronic",sub:"Prieš JAV prekybą (~14:00–16:00)",
+   cons:[{m:"ADI EPS",c:"3,88",p:"—"},{m:"BBY EPS",c:"1,49",p:"—"},{m:"DLTR EPS",c:"0,91",p:"—"},{m:"MDT EPS",c:"1,33",p:"—"}],
+   fc:[{w:"FXEmpire",v:"Analog Devices pajamos turėtų augti ~40 % per metus dėl DI infrastruktūros ir duomenų centrų"}],
+   instr:["ADI","BBY","SOX / SMH","XRT"],text:"Best Buy ir Dollar Tree parodys vartotojų nuotaikas prieš Juodąjį penktadienį. ADI – puslaidininkių sektoriaus nuotaikoms po didelio kritimo.",
+   scores:[],comp:[],conf:"",src:["fxe","stt"]},
+  {id:"cb",day:"2026-11-24",time:"17:00",ccy:"USD",imp:2,title:"JAV Conference Board vartotojų pasitikėjimas",sub:"Lapkritis · tuo pačiu metu Richmond Fed indeksas",
+   cons:[{m:"Pasitikėjimas",c:"92,1",p:"91,7"},{m:"Richmond Fed",c:"−3",p:"−2"}],
+   instr:["DXY","S&P 500","XLY"],
+   text:"Prognozuojamas nedidelis pagerėjimas. Tačiau apklausa daroma tuo metu, kai akcijos smarkiai krito, o tai paprastai mažina namų ūkių nuotaikas.",
+   scen:{hot:"Aukščiau → nedidelė parama doleriui.",cool:"Žemiau → doleris šiek tiek silpsta, vartotojų sektoriaus akcijos spaudžiamos."},
+   scores:[{a:"DXY",s:47,w:"Akcijų kritimas gali slėgti nuotaikas"},{a:"S&P 500",s:49,w:"Mažas poveikis"}],
+   comp:[{d:-3,t:"Smarkus akcijų kritimas apklausos laikotarpiu"}],conf:"Pasitikėjimas: žemas · poveikis vidutinis",
+   calc:{label:"Pasitikėjimo indeksas",cons:92.1,typ:3.5,unit:"",dirs:[{a:"DXY",d:0.6},{a:"S&P 500",d:-0.3,g:true}]},src:["fxe","lite"]},
+  {id:"boc",day:"2026-11-24",time:"laikas nepatv.",ccy:"CAD",imp:1,title:"Kanados banko vadovo Tiffo Macklemo kalba",sub:"",
+   cons:[],fc:[{w:"Oxford Economics (per Newsquawk)",v:"Vis dar tikisi BoC kėlimo gruodį, bet spalio CPI padidino tikimybę palikti"}],
+   instr:["USD/CAD"],text:"Spalio Kanados CPI buvo mišrus: bendras rodiklis žemiau prognozės, bazinis m/m aukščiau. Ieškok užuominų apie gruodžio 9 d. sprendimą.",
+   scores:[{a:"USD/CAD",s:50,w:"Aiškaus polinkio nėra"}],comp:[],conf:"Pasitikėjimas: žemas",src:["lite","nsq"]},
+  {id:"dell",day:"2026-11-24",time:"po uždarymo",ccy:"USD",imp:3,title:"Dell Technologies ataskaita (taip pat HP, Workday, Autodesk)",sub:"~23:00 · svarbu DI akcijų nuotaikoms",
+   cons:[{m:"Dell EPS",c:"6,59",p:"—"},{m:"Dell pajamos",c:"~49,2 mlrd. $",p:"+~82 % per metus"},{m:"HPQ EPS",c:"0,75",p:"—"},{m:"WDAY EPS",c:"2,74",p:"—"}],
+   fc:[{w:"FXEmpire",v:"Dėmesys DI serverių paklausai ir prognozėms"},{w:"Seeking Alpha",v:"Investuotojai žiūrės į DI užsakymų portfelį, serverių maržas ir prognozes"}],
+   instr:["DELL","Nasdaq 100","SMH","NVDA","SMCI"],
+   text:"Nvidia praeitą savaitę viršijo lūkesčius ir pakėlė prognozę, bet jos akcija penktadienį krito 14 %. Dabar rinka abejoja, kaip finansuojami duomenų centrai ir ar DI išlaidos atsipirks. Tokioje aplinkoje vien geresnių nei tikėtasi rezultatų nepakanka: reikia stiprios prognozės ir sveikų maržų.",
+   scen:{hot:"Stipri prognozė ir maržos → DELL ir DI akcijos gali smarkiai atšokti iš perparduotų lygių.",cool:"Silpnos maržos ar prognozė → patvirtina DI baimes, Nasdaq spaudimas trečiadienį."},
+   scores:[{a:"DELL",s:45,w:"Aukšta kartelė: Nvidia rezultatai viršijo lūkesčius, bet akcija krito"},{a:"Nasdaq 100",s:48,w:"DI nuotaikos trapios"}],
+   comp:[{d:-5,t:"Režimas „geri rezultatai parduodami“ (Nvidia −14 %)"},{d:+2,t:"Akcijos perparduotos, galimas atšokimas"}],
+   conf:"Pasitikėjimas: žemas · didelis kainos svyravimas",
+   calc:{label:"Dell pajamos, mlrd. $",cons:49.2,typ:1.2,unit:"",dirs:[{a:"DELL",d:1},{a:"Nasdaq 100",d:0.3}]},src:["fxe","sa","stt"]},
+
+  /* TREČIADIENIS 25 */
+  {id:"au-cpi",day:"2026-11-25",time:"02:30",ccy:"AUD",imp:3,title:"Australijos mėnesinis CPI",sub:"Spalis · paskutinis CPI prieš RBA gruodžio posėdį",
+   cons:[{m:"CPI metinis",c:"skaičiaus nerasta",p:"4,3 % (rugsėjis; prognozė buvo 4,2 %)"}],
+   fc:[{w:"RBA prognozė",v:"Bendra infliacija piką (4,5 %) pasieks 2026 m. IV ketv."},{w:"Westpac",v:"Tikisi, kad RBA gruodį palūkanų nekeis; kėlimai baigti"},{w:"NAB",v:"Spalio CPI – kitas svarbus RBA testas"}],
+   instr:["AUD/USD","AUD/JPY","ASX 200","ACGB 3 m."],
+   text:"RBA lapkritį pakėlė palūkanas iki 4,85 % (penktas kartas šiemet). Tačiau darbo rinka staigiai silpsta: nedarbas 4,9 %, du mėnesiai darbo vietų mažėjimo. Rinka žiūrės, ar bazinė infliacija pakankamai stipri, kad dar vienas kėlimas liktų ant stalo. AUD jau yra 10 mėnesių žemumose.",
+   scen:{hot:"Aukščiau konsensuso → AUD kyla (vėl kalbama apie kėlimą).",cool:"Žemiau → AUD toliau krenta; RBA pauzė patvirtinta."},
+   scores:[{a:"AUD/USD",s:50,w:"Infliacijos tendencija aukštyn, bet darbo rinka silpna"}],
+   comp:[{d:+2,t:"RBA tikisi, kad infliacija dar kils iki piko"},{d:-2,t:"Silpna darbo rinka mažina RBA reakcijos tikimybę"},{d:0,t:"Iš paskutinių 12 skaičių 6 viršijo prognozę, 6 – žemiau"}],
+   conf:"Pasitikėjimas: žemas · poveikis AUD aukštas",
+   calc:{label:"CPI metinis, %",cons:null,typ:0.1,unit:"%",dirs:[{a:"AUD/USD",d:1},{a:"ASX 200",d:-0.4}]},src:["nsq","rba","ffau"]},
+  {id:"pce",day:"2026-11-25",time:"15:30",ccy:"USD",imp:3,title:"JAV PCE infliacija + BVP + ilgalaikio vartojimo prekių užsakymai + nedarbo pašalpos",sub:"Svarbiausia savaitės naujiena · paskutinė infliacija prieš Fed gruodžio 8–9 d.",
+   cons:[{m:"Bazinis PCE m/m",c:"0,3 %",p:"0,3 %"},{m:"Bazinis PCE metinis",c:"3,2 %",p:"3,1 %"},{m:"Bendras PCE m/m",c:"0,3 %",p:"0,5 %"},{m:"Bendras PCE metinis",c:"—",p:"3,6 %"},
+         {m:"BVP III ketv. (2-as įvert.)",c:"3,5 %",p:"3,4 %"},{m:"Asmeninės pajamos",c:"0,3–0,4 %",p:"0,2 %"},{m:"Asmeninis vartojimas",c:"0,4 %",p:"0,5 %"},
+         {m:"Ilgalaikio vartojimo prekių užsakymai",c:"0,5 %",p:"1,9 %"},{m:"Pirminės nedarbo pašalpos",c:"201 tūkst.",p:"203 tūkst."}],
+   fc:[{w:"Pantheon Macroeconomics",v:"Bazinis m/m 0,31 % (sumažino nuo 0,37 %); metinis 3,3 %, gali būti suapvalinta iki 3,2 %"},{w:"Oxford Economics",v:"Bazinis m/m 0,27 %, metinis 3,2 %; bendras metinis 3,8 %"},{w:"Fed valdytoja Bowman",v:"Užsiminė apie 3,3 % bazinį metinį"},{w:"U.S. Bank",v:"Bendras ir bazinis po 0,3 % m/m; pajamos +0,3 %"},{w:"Oxford Economics (nowcast)",v:"Gruodį tikimasi 0,25 p. p. kėlimo; rinka per daug įkainojo 0,5 p. p. tikimybę"}],
+   instr:["DXY","EUR/USD","USD/JPY","S&P 500","Nasdaq 100","Auksas","UST 2 m.","UST 10 m.","Bitcoin"],
+   text:"Gruodžio kėlimas 0,25 p. p. jau beveik visiškai įkainotas, todėl klausimas yra, ar PCE padidins tikimybę, kad kėlimas bus 0,5 p. p. Spalio CPI buvo karštas (bazinis 0,3 % vs 0,2 % prognozė), bet PPI buvo švelnesnis. Lėktuvų bilietai galėjo pigti ~2,5 %, o ligoninių paslaugos kilo tik ~0,2 %, o šie komponentai PCE turi didesnį svorį. Specialistų prognozės išsidėsčiusios aplink 0,3 % be aiškaus nuokrypio. Akcijos įeina į savaitę po didžiausio kritimo per kelerius metus. Daugelis duomenų paskelbiami tą pačią valandą, o ketvirtadienį rinkos uždarytos, todėl likvidumas mažas ir judesiai gali būti staigūs.",
+   scen:{hot:"Bazinis ≥0,4 % m/m → 0,5 p. p. kėlimo tikimybė kyla, doleris ir pajamingumai kyla, Nasdaq artėja prie paramos (~22 400), auksas krenta.",cool:"Bazinis ≤0,2 % arba 0,3 % su žema neapvalinta reikšme → 0,5 p. p. baimė dingsta, akcijoms galimas atsigavimo šuolis, doleris silpsta."},
+   scores:[{a:"DXY",s:45,w:"Specialistai šiek tiek žemiau 0,3 %; 0,5 p. p. per daug įkainota"},{a:"S&P 500",s:57,w:"Perparduota + asimetrija, jei duomenys atitinka prognozę"},{a:"Auksas",s:53,w:"Švelnesnis doleris palaikytų"},{a:"UST 2 m. pajamingumas",s:45,w:"Mažėtų 0,5 p. p. lūkesčiai"}],
+   comp:[{d:-3,t:"Pantheon 0,31 %, Oxford 0,27 % m/m: vidurkis šiek tiek žemiau 0,3 %"},{d:+2,t:"Bowman užsiminė apie 3,3 % metinį (aukščiau 3,2 %)"},{d:-3,t:"Švelnesnis PPI, pigesni lėktuvų bilietai, ligoninių paslaugos tik +0,2 %"},{d:+1,t:"Karštas spalio CPI (jau iš dalies konsensuse)"},{d:-2,t:"Oxford: rinka per daug įkainojo 0,5 p. p., todėl doleriui gresia daugiau nusivylimo"},{d:+3,t:"Akcijos: −8,6 % per savaitę, perparduotos (taikoma S&P 500)"}],
+   conf:"Pasitikėjimas: vidutinis-žemas · poveikis labai aukštas · ketvirtadienį rinkos uždarytos",
+   calc:{label:"Bazinis PCE m/m, %",cons:0.3,typ:0.1,unit:"%",dirs:[{a:"DXY",d:1},{a:"S&P 500",d:-1},{a:"Nasdaq 100",d:-1},{a:"Auksas",d:-0.7},{a:"UST 2 m. pajamingumas",d:1},{a:"Bitcoin",d:-1}]},
+   src:["fxe","nsq","te","oxf","usb","sa","jorg","fw"]},
+  {id:"nhs",day:"2026-11-25",time:"17:00",ccy:"USD",imp:1,title:"JAV naujų namų pardavimai",sub:"Spalis",
+   cons:[{m:"Pardavimai (metinis tempas)",c:"649 tūkst.",p:"676 tūkst."}],instr:["DXY","ITB / XHB"],text:"Mažesnės svarbos, ypač tą pačią dieną kaip PCE.",
+   scores:[{a:"DXY",s:50,w:"Mažas poveikis"}],comp:[],conf:"",calc:{label:"Pardavimai, tūkst.",cons:649,typ:40,unit:"",dirs:[{a:"DXY",d:0.3}]},src:["fxe"]},
+  {id:"beige",day:"2026-11-25",time:"21:00",ccy:"USD",imp:2,title:"Fed „Beige Book“",sub:"Regioninė ekonomikos apžvalga",
+   cons:[],instr:["DXY","UST 2 m."],
+   text:"Tai kokybinė ataskaita. Rinka ieškos užuominų apie kainų spaudimą ir darbo rinką. Spalio FOMC protokolas buvo griežtas: beveik visi nariai mano, kad reikia dar kelti, keli svarstė daugiau nei 0,25 p. p.",
+   scores:[{a:"DXY",s:50,w:"Paprastai mažas poveikis"}],comp:[],conf:"Pasitikėjimas: žemas",src:["fxe","nsq"]},
+
+  /* KETVIRTADIENIS 26 */
+  {id:"us-hol",day:"2026-11-26",time:"visą d.",ccy:"USD",imp:1,title:"JAV Padėkos diena: biržos ir obligacijų rinka uždarytos",sub:"Forex likvidumas labai mažas",
+   cons:[],instr:["Visi USD instrumentai"],text:"Didelių JAV duomenų nėra. Mažas likvidumas gali sukelti netikėtus šuolius.",scores:[],comp:[],conf:"",src:["lite","rio"]},
+  {id:"bok",day:"2026-11-26",time:"~03:00",ccy:"KRW",imp:2,title:"Pietų Korėjos banko palūkanų sprendimas",sub:"",
+   cons:[{m:"Bazinė palūkanų norma",c:"3,25 % (+0,25 p. p.)",p:"3,00 %"}],fc:[{w:"Morgan Stanley",v:"Kėlimai lapkritį ir vasarį, iki 3,50 %"},{w:"Duomenys",v:"III ketv. BVP +1,0 % (prognozė 0,7 %); CPI 2,8 %"}],
+   instr:["USD/KRW","KOSPI"],text:"Kėlimas plačiai laukiamas. Staigmena būtų tik palūkanų palikimas.",
+   scen:{hot:"Kėlimas + griežtas tonas → KRW stiprėja.",cool:"Palieka → KRW silpnėja, KOSPI kyla."},
+   scores:[{a:"KRW (stiprėja)",s:52,w:"Stiprus BVP palaiko kėlimą"}],comp:[{d:+2,t:"BVP viršijo prognozę"}],conf:"Pasitikėjimas: vidutinis",
+   calc:{label:"Sprendimas, p. p.",cons:0.25,typ:0.25,unit:"",dirs:[{a:"KRW (stiprėja)",d:1},{a:"KOSPI",d:-0.5}]},src:["nsq","te"]},
+  {id:"gfk",day:"2026-11-26",time:"~09:00",ccy:"EUR",imp:1,title:"Vokietijos GfK vartotojų nuotaikos",sub:"Gruodis",
+   cons:[{m:"Indeksas",c:"tikimasi atsigavimo nuo 6 mėn. žemumos",p:"—"}],instr:["EUR/USD","DAX"],text:"Mažesnės svarbos.",
+   scores:[{a:"EUR/USD",s:50,w:"Mažas poveikis"}],comp:[],conf:"",src:["te"]},
+  {id:"ecb-min",day:"2026-11-26",time:"~14:30",ccy:"EUR",imp:2,title:"ECB spalio posėdžio protokolas",sub:"",
+   cons:[],fc:[{w:"Newsquawk",v:"Poveikis rinkai tikėtinas ribotas; ECB laikomas besiruošiančiu kelti gruodį"}],
+   instr:["EUR/USD","Bund 2 m.","OAT–Bund skirtumas"],
+   text:"Svarbu, kiek diskutuota apie kėlimą spalį ir kodėl jo nebuvo, nors Lagarde sakė, kad sąlygos galėjo jį pateisinti. Taip pat ar aptarti Prancūzijos obligacijų skirtumai ir TPI.",
+   scen:{hot:"Daug palaikymo kėlimui → EUR kyla.",cool:"Atsargesnis tonas → EUR šiek tiek krenta."},
+   scores:[{a:"EUR/USD",s:52,w:"Griežta diskusija palaikytų EUR"}],comp:[{d:+2,t:"Lagarde: sąlygos galėjo pateisinti kėlimą"}],conf:"Pasitikėjimas: žemas",src:["nsq"]},
+  {id:"tokyo",day:"2026-11-27",time:"01:30",ccy:"JPY",imp:3,title:"Tokijo CPI",sub:"Lapkritis · svarbus prieš BoJ gruodžio 17–18 d.",
+   cons:[{m:"Bazinis (be šviežio maisto) metinis",c:"3,0 %",p:"2,6 %"}],
+   fc:[{w:"Reuters apklausa (per Newsquawk)",v:"61 iš 71 ekonomisto tikisi BoJ kėlimo iki 1,50 % gruodį"},{w:"BoJ vadovas Ueda",v:"Palūkanos kils toliau; silpnesnė jena gali kelti infliaciją virš tikslo"}],
+   instr:["USD/JPY","EUR/JPY","Nikkei 225","JGB 2 m."],
+   text:"Laukiamas didelis šuolis nuo 2,6 % iki 3,0 %. Spalį Tokijo infliacija buvo švelnesnė nei tikėtasi, o šalies bazinė buvo 2,2 % vs 2,3 % prognozė. Aukštesnis rezultatas sustiprintų BoJ kėlimą ir jeną.",
+   scen:{hot:"≥3,1 % → jena stiprėja (USD/JPY krenta), Nikkei spaudžiamas.",cool:"≤2,9 % → USD/JPY kyla, abejonės dėl gruodžio kėlimo."},
+   scores:[{a:"USD/JPY",s:53,w:"Pastarieji skaičiai buvo šiek tiek žemiau prognozių"}],
+   comp:[{d:+3,t:"Spalio šalies CPI žemiau prognozės (2,2 vs 2,3 %)"}],conf:"Pasitikėjimas: žemas",
+   calc:{label:"Bazinis CPI metinis, %",cons:3.0,typ:0.1,unit:"%",dirs:[{a:"USD/JPY",d:-1},{a:"Nikkei 225",d:-0.5}]},src:["te","nsq","tes"]},
+
+  /* PENKTADIENIS 27 */
+  {id:"cn-prof",day:"2026-11-27",time:"~03:30",ccy:"CNY",imp:1,title:"Kinijos pramonės pelnas",sub:"Spalis",
+   cons:[{m:"Pelnas metinis",c:"konsensuso nerasta",p:"—"}],fc:[{w:"Praeitos savaitės duomenys",v:"Pramonės gamyba 4,8 % (prognozė 5,3 %), mažmena 0,4 % (0,8 %), investicijos −8,1 %"}],
+   instr:["USD/CNH","AUD/USD","Hang Seng","Varis"],text:"Kinijos ekonomika silpsta plačiai, todėl ir pelnas gali nuvilti.",
+   scores:[{a:"AUD/USD",s:48,w:"Silpni Kinijos duomenys slegia AUD"}],comp:[{d:-2,t:"Lapkričio aktyvumo duomenys silpni visur"}],conf:"Pasitikėjimas: žemas",src:["nsq","tes"]},
+  {id:"fr-es-cpi",day:"2026-11-27",time:"~09:45",ccy:"EUR",imp:2,title:"Prancūzijos ir Ispanijos išankstinis CPI",sub:"Lapkritis (Ispanija ~10:00)",
+   cons:[{m:"CPI metinis",c:"konsensuso nerasta",p:"aukščiausi nuo 2023 m."}],
+   fc:[{w:"Trading Economics",v:"Prancūzijos infliacija didžiausia nuo 2023 m. gruodžio, Ispanijos – nuo 2023 m. vasario"}],
+   instr:["EUR/USD","Bund 2 m.","OAT–Bund"],text:"Pirmieji euro zonos lapkričio infliacijos ženklai prieš ECB gruodžio sprendimą. Spalį euro zonos infliacija pakilo iki 4,0 %.",
+   scen:{hot:"Aukščiau → EUR kyla, ECB kėlimas tvirtesnis.",cool:"Žemiau → EUR krenta."},
+   scores:[{a:"EUR/USD",s:50,w:"Energijos kainų kritimas gali atsverti"}],comp:[],conf:"Pasitikėjimas: žemas",
+   calc:{label:"CPI metinis, %",cons:null,typ:0.15,unit:"%",dirs:[{a:"EUR/USD",d:1}]},src:["te","nsq"]},
+  {id:"ez-esi",day:"2026-11-27",time:"~12:00",ccy:"EUR",imp:1,title:"Euro zonos ekonominės nuotaikos",sub:"Lapkritis",
+   cons:[],instr:["EUR/USD"],text:"Mažesnės svarbos.",scores:[],comp:[],conf:"",src:["nsq"]},
+  {id:"us-fri",day:"2026-11-27",time:"15:30",ccy:"USD",imp:1,title:"JAV prekių prekybos balansas ir didmeninės atsargos",sub:"Akcijų rinkos dirba trumpiau (iki ~20:00)",
+   cons:[{m:"Prekių balansas",c:"−134,4 mlrd. $",p:"−135,1 mlrd. $"},{m:"Didmeninės atsargos",c:"0,7 %",p:"0,7 %"}],instr:["DXY"],text:"Mažesnės svarbos, mažas likvidumas.",
+   scores:[],comp:[],conf:"",src:["fxe"]},
+  {id:"france-sp",day:"2026-11-27",time:"vėlai vakare",ccy:"EUR",imp:2,title:"S&P Prancūzijos kredito reitingo peržiūra",sub:"Po Europos rinkų uždarymo",
+   cons:[],instr:["OAT–Bund","EUR/USD","CAC 40"],text:"Susiję su ECB diskusijomis apie Prancūzijos obligacijų skirtumus. Sumažinimas paveiktų pirmadienio prekybą.",
+   scen:{hot:"Reitingas nepakeistas → OAT skirtumas mažėja.",cool:"Sumažinimas → OAT skirtumas didėja, EUR spaudžiamas."},
+   scores:[{a:"EUR/USD",s:49,w:"Rizika daugiau į blogąją pusę"}],comp:[],conf:"Pasitikėjimas: žemas",src:["nsq"]}
+];
+
+const BACKTEST = [
+  {date:"2026-01-13",ev:"JAV CPI (2025 gruodis), bazinis m/m",cons:"0,3 %",act:"0,2 %",cN:0.3,aN:0.2,typ:0.1,
+   assets:[{a:"DXY",d:1,hit:true}],react:"Doleris trumpam krito iškart po paskelbimo",u:"https://www.babypips.com/news/headline-december-us-cpi-steady-core-inflation-short-2026-01-14"},
+  {date:"2026-02-11",ev:"JAV NFP (sausis)",cons:"~70 tūkst.",act:"130 tūkst.",cN:70,aN:130,typ:75,
+   assets:[{a:"DXY",d:1,hit:true},{a:"S&P 500",d:-0.5,hit:false,rHit:true}],react:"Doleris kilo prieš visas valiutas (vėliau dalį prarado), akcijos taip pat kilo",
+   pre:{s:42,t:"ADP sausį tik 22 tūkst. → polinkis į silpną skaičių",hit:false},regime:"laukta mažinimų",u:"https://www.kitco.com/news/off-the-wire/2026-02-11/us-jobs-beat-january-affirms-steady-fed-view"},
+  {date:"2026-02-13",ev:"JAV CPI (sausis), bazinis m/m",cons:"0,3 %",act:"0,3 % (bendras 0,2 vs 0,3 %)",cN:0.3,aN:0.3,typ:0.1,neutral:true,
+   assets:[{a:"DXY",d:1,hit:null}],react:"Mišri: doleris kilo, pajamingumai krito, akcijas slėgė technologijų išpardavimas",note:"Nevertinama: reakcija mišri",u:"https://www.republicworld.com/business/us-consumer-prices-increase-marginally-but-inflation-pressures-persist"},
+  {date:"2026-03-06",ev:"JAV NFP (vasaris)",cons:"~55 tūkst.",act:"−92 tūkst.",cN:55,aN:-92,typ:75,
+   assets:[{a:"S&P 500",d:-0.5,hit:false,rHit:true}],react:"Akcijos krito po netikėto darbo vietų sumažėjimo",regime:"laukta mažinimų",u:"https://www.cbsnews.com/amp/news/jobs-report-today-february-2026-economy-layoffs-bls"},
+  {date:"2026-03-11",ev:"JAV CPI (vasaris), bazinis m/m",cons:"0,2 %",act:"0,2 %",cN:0.2,aN:0.2,typ:0.1,neutral:true,
+   assets:[{a:"DXY",d:1,hit:true}],react:"Reakcija paskelbimo metu prislopinta",u:"https://www.babypips.com/news/headline-us-february-cpi-in-line-with-forecasts-usd-firms-as-iran-war-keeps-inflation-fears-alive-2026-03-12"},
+  {date:"2026-04-10",ev:"JAV CPI (kovas), bazinis m/m",cons:"0,3 %",act:"0,2 %",cN:0.3,aN:0.2,typ:0.1,
+   assets:[{a:"DXY",d:1,hit:true},{a:"S&P 500",d:-1,hit:true}],react:"DXY −0,26 %, akcijos kilo jau aštuntą sesiją iš eilės",u:"https://www.nasdaq.com/articles/dollar-slips-weaker-expected-us-economic-news"},
+  {date:"2026-05-08",ev:"JAV NFP (balandis)",cons:"~65 tūkst.",act:"115 tūkst.",cN:65,aN:115,typ:75,
+   assets:[{a:"S&P 500",d:-0.5,hit:false,rHit:true}],react:"Akcijų ateities sandoriai kilo; bendrai reakcija prislopinta",regime:"Fed laikėsi, kėlimų nebuvo laukiama",u:"https://www.nasdaq.com/articles/bls-jobs-115k-double-expectations"},
+  {date:"2026-05-12",ev:"JAV CPI (balandis), bazinis m/m",cons:"0,3 %",act:"0,4 %",cN:0.3,aN:0.4,typ:0.1,
+   assets:[{a:"DXY",d:1,hit:true},{a:"S&P 500",d:-1,hit:null}],react:"Doleris sustiprėjo; akcijos iš pradžių krito, vėliau atsigavo",u:"https://www.babypips.com/news/headline-us-dollar-firms-as-u-s-inflation-hits-highest-level-in-three-years-2026-05-13"},
+  {date:"2026-06-05",ev:"JAV NFP (gegužė)",cons:"~85 tūkst.",act:"172 tūkst.",cN:85,aN:172,typ:75,
+   assets:[{a:"DXY",d:1,hit:true},{a:"S&P 500",d:-0.5,hit:true,rHit:true}],react:"DXY pakilo iki 99,25, akcijos krito",
+   pre:{s:57,t:"ADP 122 tūkst., viršijo lūkesčius → polinkis į stiprų skaičių",hit:true},u:"https://www.interactivebrokers.com/campus/?p=243903"},
+  {date:"2026-06-10",ev:"JAV CPI (gegužė), bazinis m/m",cons:"0,3 %",act:"0,2 %",cN:0.3,aN:0.2,typ:0.1,
+   assets:[{a:"DXY",d:1,hit:true},{a:"S&P 500",d:-1,hit:true}],react:"Doleris silpo, akcijos atšoko nuo ryto žemumų, 10 m. pajamingumas −3 bp",u:"https://www.brecorder.com/news/amp/40424909"},
+  {date:"2026-06-17",ev:"Fed sprendimas (pirmas Warsho)",cons:"palikti 3,50–3,75 %",act:"palikta, bet griežtas „dot plot“",z:0,neutral:true,
+   assets:[{a:"S&P 500",d:1,hit:false}],react:"Indeksai krito ~1 %: pusė narių prognozavo kėlimą",note:"Sprendimas atitiko lūkesčius, judino prognozės",u:"https://advisorservices.schwab.com/story/count-down-to-rate-cuts-and-hikes"},
+  {date:"2026-07-02",ev:"JAV NFP (birželis)",cons:"~110 tūkst.",act:"57 tūkst.",cN:110,aN:57,typ:75,
+   assets:[{a:"S&P 500",d:-0.5,hit:true,rHit:true}],react:"Obligacijos brango, akcijos kilo (rizikos apetitas)",
+   pre:{s:44,t:"ADP 98 tūkst. vs 111 tūkst. prognozė → polinkis į silpną skaičių",hit:true},u:"https://www.interactivebrokers.com/campus/?p=249087"},
+  {date:"2026-07-14",ev:"JAV CPI (birželis), bazinis m/m",cons:"0,2 %",act:"0,0 %",cN:0.2,aN:0.0,typ:0.1,
+   assets:[{a:"DXY",d:1,hit:true},{a:"S&P 500",d:-1,hit:true}],react:"Doleris smarkiai krito, S&P 500 +0,3 %, Nasdaq +0,6 %",u:"https://www.investing.com/news/economic-indicators/cpi-comes-in-cool-soothing-markets-4791058"},
+  {date:"2026-08-07",ev:"JAV NFP (liepa)",cons:"~85 tūkst.",act:"−23 tūkst.",cN:85,aN:-23,typ:75,
+   assets:[{a:"S&P 500",d:-0.5,hit:true,rHit:true}],react:"Akcijos kilo, pajamingumai krito",u:"https://www.ajc.com/news/2026/08/us-stocks-jump-as-employers-unexpectedly-cut-23000-jobs-raising-hopes-that-rate-hikes-can-wait/"},
+  {date:"2026-08-12",ev:"JAV CPI (liepa), bazinis m/m",cons:"0,2 %",act:"0,2 %",cN:0.2,aN:0.2,typ:0.1,neutral:true,
+   assets:[{a:"DXY",d:1,hit:true}],react:"Mažas judesys: EUR/USD +0,1 %, doleris šiek tiek silpo",u:"https://www.xtb.com/en/market-analysis/breaking-us-cpi-in-line-with-estimates-eurusd-muted"},
+  {date:"2026-09-04",ev:"JAV NFP (rugpjūtis)",cons:"~55 tūkst.",act:"162 tūkst.",cN:55,aN:162,typ:75,
+   assets:[{a:"S&P 500",d:-0.5,hit:true,rHit:true}],react:"S&P 500 −0,4 %, 2 m. pajamingumas kilo iki 4,37 %",
+   pre:{s:43,t:"ADP tik 38 tūkst. → polinkis į silpną skaičių",hit:false},u:"https://www.lanacion.com.ar/usa/how-major-us-stock-indexes-fared-friday-942026-nid04092026/"},
+  {date:"2026-09-11",ev:"JAV CPI (rugpjūtis), bazinis m/m",cons:"0,2 %",act:"0,3 %",cN:0.2,aN:0.3,typ:0.1,
+   assets:[{a:"S&P 500",d:-1,hit:false}],react:"Akcijos atšoko, nes krito naftos kainos",u:"https://www.insiderfinance.io/news/august-cpi-meets-forecast-stocks-rebound"},
+  {date:"2026-09-16",ev:"Fed sprendimas",cons:"kelti +0,25 p. p.",act:"pakelta (12–0), užuominos apie daugiau",z:0,neutral:true,
+   assets:[{a:"S&P 500",d:1,hit:false}],react:"Visi S&P 500 sektoriai raudoni, Dow −1,2 %, doleris stiprėjo; kitą dieną atšoko",note:"Sprendimas atitiko lūkesčius, judino Warsho tonas",u:"https://www.schwabassetmanagement.com/story/fomc-meeting?segment=advisor"},
+  {date:"2026-09-30",ev:"JAV bazinis PCE (rugpjūtis), m/m",cons:"0,3 % (metinis 3,3 %)",act:"0,2 % (3,0 %)",cN:0.3,aN:0.2,typ:0.1,
+   assets:[{a:"DXY",d:1,hit:true},{a:"S&P 500",d:-1,hit:true}],react:"Doleris silpo, 2 m. −4 bp, akcijų ateities sandoriai kilo",u:"https://www.xtb.com/en/market-analysis/pce-cools-october-rate-hike-expectations-as-stocks-surge-into-quarter-end"},
+  {date:"2026-10-02",ev:"JAV NFP (rugsėjis)",cons:"90 tūkst.",act:"29 tūkst.",cN:90,aN:29,typ:75,
+   assets:[{a:"DXY",d:1,hit:true},{a:"S&P 500",d:-0.5,hit:true,rHit:true}],react:"DXY −0,16 %, 2 m. −6 bp, akcijos kilo",
+   pre:{s:56,t:"ADP pakilo iki 90 tūkst. → polinkis į stipresnį skaičių",hit:false},u:"https://www.interactivebrokers.com/campus/traders-insight/securities/macro/september-jobs-report-misses-us-economy-adds-29000-jobs/"},
+  {date:"2026-10-14",ev:"JAV CPI (rugsėjis), bazinis m/m",cons:"0,2 %",act:"0,3 %",cN:0.2,aN:0.3,typ:0.1,
+   assets:[{a:"DXY",d:1,hit:true},{a:"S&P 500",d:-1,hit:true}],react:"Doleris šoko (vėliau dalį prarado), S&P 500 −0,8 %, EUR/USD apie −0,8 %",u:"https://www.xtb.com/ae-en/market-analysis/news-and-research/us-inflation-concerns-rise"},
+  {date:"2026-10-28",ev:"Fed sprendimas",cons:"palikti 3,75–4,00 %",act:"palikta (10–2)",z:0,neutral:true,
+   assets:[{a:"S&P 500",d:1,hit:true}],react:"S&P 500 +0,3 %, pajamingumai beveik nepakito",u:"https://www.schwab.com/learn/story/fomc-meeting"},
+  {date:"2026-11-06",ev:"JAV NFP (spalis)",cons:"65 tūkst.",act:"165 tūkst.",cN:65,aN:165,typ:75,
+   assets:[{a:"DXY",d:1,hit:true},{a:"S&P 500",d:-0.5,hit:false,rHit:false}],react:"Doleris stiprėjo labiausiai; S&P 500 +0,3 %, nes technologijų akcijos atšoko po −4,4 % dienos",
+   pre:{s:58,t:"ADP 86 tūkst. vs 69 tūkst. prognozė → polinkis į stipresnį skaičių",hit:true},u:"https://www.zerohedge.com/markets/tech-stocks-rebound-and-yields-rise-amid-stellar-us-jobs-report-newsquawk-us-market-wrap"},
+  {date:"2026-11-10",ev:"JAV CPI (spalis), bazinis m/m",cons:"0,2 %",act:"0,3 %",cN:0.2,aN:0.3,typ:0.1,
+   assets:[{a:"DXY",d:1,hit:true},{a:"S&P 500",d:-1,hit:true}],react:"DXY +0,3 %, 2 m. +15 bp, Nasdaq −1 %, S&P −0,6 %",
+   pre:{s:45,t:"Morgan Stanley: sezoniškumas turėjo būti palankus → polinkis į švelnesnį skaičių",hit:false},u:"https://www.aol.com/articles/hot-october-inflation-report-rattles-135837000.html"},
+  {date:"2026-11-16",ev:"Kanados CPI metinis (spalis)",cons:"3,2 %",act:"3,1 % (bazinis m/m 0,4 vs 0,2 %)",cN:3.2,aN:3.1,typ:0.1,
+   assets:[{a:"USD/CAD",d:-1,hit:true}],react:"USD/CAD 1,4286 → 1,4300 (CAD silpo)",
+   pre:{s:55,t:"7 iš paskutinių 11 skaičių buvo žemiau prognozės → polinkis į žemesnį",hit:true},u:"https://fxnx.com/en/analysis/canadian-inflation-edges-under-forecasts-in-october-loonie-softens-and-bond-yields-ease-e8ca1595"},
+  {date:"2026-11-17",ev:"JAV mažmena, „control group“ (spalis)",cons:"0,4 %",act:"0,6 %",cN:0.4,aN:0.6,typ:0.3,
+   assets:[{a:"DXY",d:1,hit:true}],react:"DXY nedaug kilo link 103,7",u:"https://www.fxstreet.com/news//us-retail-sales-rose-by-02-mom-in-october-202611171334"},
+  {date:"2026-11-18",ev:"JK CPI metinis (spalis)",cons:"3,7 %",act:"3,6 %",cN:3.7,aN:3.6,typ:0.1,
+   assets:[{a:"GBP/USD",d:1,hit:true}],react:"GBP/USD 1,3193 → 1,3172; BoE kėlimo tikimybė 80 → 70 %",u:"https://www.poundsterlinglive.com/gbp-live-today/23888-pound-to-euro-and-dollar-uk-inflation-october-bank-of-england"},
+  {date:"2026-11-19",ev:"Australijos nedarbas (spalis)",cons:"4,7 %",act:"4,9 %",cN:4.7,aN:4.9,typ:0.1,
+   assets:[{a:"AUD/USD",d:-1,hit:true}],react:"AUD/USD nukrito žemiau 0,6700",
+   pre:{s:45,t:"Rugsėjį −39 tūkst., nedarbas kilo 3 mėn. iš eilės → polinkis į silpną skaičių",hit:true},u:"https://investinglive.com/central-banks/australian-unemployment-jumps-to-4-9-as-jobs-fall-43-500-taking-rba-hikes-off-the-table/"}
+].reverse();
+
+
+// CPI 2021-11..2023-07: bazinis metinis (forexfundamentals), S&P 500 dienos pokytis (squawkflow)
+const CPI_A=[["2021-11-10",4.3,4.6,-0.82],["2021-12-10",4.9,4.9,0.95],["2022-01-12",5.4,5.5,0.28],["2022-02-10",5.9,6.0,-1.81],["2022-03-10",6.4,6.4,-0.43],["2022-04-12",6.6,6.5,-0.34],["2022-05-11",6.0,6.2,-1.65],["2022-06-10",5.9,6.0,-2.91],["2022-07-13",5.7,5.9,-0.45],["2022-08-10",6.1,5.9,2.13],["2022-09-13",6.1,6.3,-4.32],["2022-10-13",6.5,6.6,2.60],["2022-11-10",6.5,6.3,5.54],["2022-12-13",6.1,6.0,0.73],["2023-01-12",5.7,5.7,0.34],["2023-02-14",5.5,5.6,-0.03],["2023-03-14",5.5,5.5,1.65],["2023-04-12",5.6,5.6,-0.41],["2023-05-10",5.5,5.5,0.45],["2023-06-13",5.3,5.3,0.69],["2023-07-12",5.0,4.8,0.74]];
+// CPI 2023-08..2026-11: bendras m/m (tradingcipher), S&P 500 pokytis per 30 min.
+const CPI_B=[["2023-08-10",0.2,0.2,0.23],["2023-09-13",0.6,0.6,0.06],["2023-10-12",0.3,0.4,-0.30],["2023-11-14",0.1,0.0,1.30],["2023-12-12",0.0,0.1,-0.33],["2024-01-11",0.2,0.3,-0.48],["2024-02-13",0.2,0.3,-0.91],["2024-03-12",0.4,0.4,0.21],["2024-04-10",0.3,0.4,-1.51],["2024-06-12",0.1,0.0,0.69],["2024-07-11",0.1,-0.1,0.05],["2024-08-14",0.2,0.2,0.06],["2024-09-11",0.2,0.2,-0.06],["2024-10-10",0.1,0.2,-0.23],["2024-11-13",0.2,0.2,0.18],["2024-12-11",0.3,0.3,0.24],["2025-01-15",0.4,0.4,1.14],["2025-02-12",0.3,0.5,-1.01],["2025-03-12",0.3,0.2,0.35],["2025-04-10",0.1,-0.1,0.01],["2025-05-13",0.3,0.2,0.04],["2025-06-11",0.2,0.1,0.31],["2025-07-15",0.3,0.3,0.11],["2025-08-12",0.2,0.2,0.45],["2025-09-11",0.3,0.4,0.05],["2025-10-24",0.4,0.3,0.26],["2026-01-13",0.3,0.3,0.18],["2026-02-13",0.3,0.2,0.25],["2026-03-11",0.3,0.3,-0.26],["2026-04-10",1.0,0.9,-0.03],["2026-05-12",0.6,0.6,0.17],["2026-06-10",0.5,0.5,0.17],["2026-07-14",-0.1,-0.4,0.23],["2026-08-12",0.1,0.1,0.06],["2026-09-11",0.4,0.4,0.29],["2026-11-10",0.3,0.4,-0.83]];
+// NFP 2021-11..2023-07: forexfundamentals konsensusas/faktas (tūkst.), S&P 500 dienos pokytis (FRED uždarymo kainos)
+const NFP_FRED=[["2021-11-05",450,531,4680.06,4697.53],["2021-12-03",550,210,4577.10,4538.43],["2022-01-07",400,199,4696.05,4677.03],["2022-02-04",150,467,4477.44,4500.53],["2022-03-04",400,678,4363.49,4328.87],["2022-04-01",490,431,4530.41,4545.86],["2022-05-06",391,428,4146.87,4123.34],["2022-06-03",325,390,4176.82,4108.54],["2022-07-08",268,372,3902.62,3899.38],["2022-08-05",250,528,4151.94,4145.19],["2022-09-02",300,315,3966.85,3924.26],["2022-10-07",250,263,3744.52,3639.66],["2022-11-04",200,261,3719.89,3770.55],["2022-12-02",200,263,4076.57,4071.70],["2023-01-06",200,223,3808.10,3895.08],["2023-02-03",185,517,4179.76,4136.48],["2023-03-10",205,311,3918.32,3861.59],["2023-05-05",180,253,4061.22,4136.25],["2023-06-02",190,339,4221.02,4282.37],["2023-07-07",225,209,4411.59,4398.95]];
+const NFP_A=NFP_FRED.map(r=>[r[0],r[1],r[2],Math.round((r[4]/r[3]-1)*10000)/100]);
+// NFP 2023-08..2026-11: tradingcipher konsensusas/faktas, S&P 500 pokytis per 30 min. (be dviejų dienų, kai kartu skelbta mažmena)
+const NFP_B=[["2023-08-04",205,187,0.19],["2023-09-01",169,187,0.21],["2023-10-06",171,336,-1.00],["2023-11-03",178,150,0.55],["2023-12-08",184,199,0.01],["2024-01-05",168,216,0.01],["2024-02-02",187,353,-0.59],["2024-03-08",198,275,0.34],["2024-04-05",212,303,-0.12],["2024-05-03",238,175,0.75],["2024-06-07",182,272,-0.51],["2024-07-05",191,206,-0.02],["2024-08-02",176,114,-0.56],["2024-09-06",164,142,0.62],["2024-10-04",147,254,0.53],["2024-11-01",106,12,0.12],["2024-12-06",218,227,0.21],["2025-01-10",164,256,-0.73],["2025-02-07",169,143,0.12],["2025-03-07",159,151,-0.22],["2025-04-04",137,228,0.27],["2025-05-02",138,177,0.74],["2025-06-06",126,139,0.35],["2025-07-03",111,147,0.08],["2025-08-01",106,73,-0.17],["2025-09-05",75,22,0.32],["2025-11-20",53,119,0.40],["2026-01-09",66,50,0.17],["2026-02-11",66,130,0.46],["2026-05-08",65,115,-0.03],["2026-06-05",85,172,-0.12],["2026-07-02",114,57,0.07],["2026-08-07",85,-23,0.23],["2026-09-04",55,162,-0.27],["2026-10-02",89,29,0.42],["2026-11-06",65,165,-0.10]];
+// NVDA: EPS prognozė/faktas (AlphaQuery/Zacks), akcijos pokytis kitą dieną (SimianX)
+const NVDA=[["2021-11-17",0.09,0.10,8.25],["2022-02-16",0.10,0.11,-7.56],["2022-05-25",0.11,0.12,5.16],["2022-08-24",0.03,0.03,4.01],["2022-11-16",0.04,0.03,-1.46],["2023-02-22",0.05,0.06,14.02],["2023-05-24",0.06,0.09,24.37],["2023-08-23",0.18,0.25,0.10],["2023-11-21",0.30,0.38,-2.46],["2024-02-21",0.42,0.49,16.40],["2024-05-22",0.51,0.58,9.32],["2024-08-28",0.60,0.65,-6.38],["2024-11-20",0.70,0.78,0.53],["2025-02-26",0.79,0.85,-8.48],["2025-05-28",0.80,0.77,3.25],["2025-08-27",0.94,0.99,-0.79],["2025-11-19",1.18,1.24,-3.15],["2026-02-25",1.45,1.57,-5.46],["2026-05-20",1.70,1.87,-1.77],["2026-08-26",2.09,2.22,8.74],["2026-11-17",2.47,2.68,-2.89]];
+// Fed režimas: "inf" = rinka bijo infliacijos/kėlimų, "aug" = rinka bijo lėtėjimo/laukia mažinimų
+function regime(d){ if(d<"2024-08-01")return"inf"; if(d<"2026-06-01")return"aug"; return"inf"; }
+
+// DELL: EPS prognozė/faktas (AlphaQuery/Zacks), akcijos pokytis kitą dieną (OptionsAI)
+const DELL=[["2022-02-24",1.95,1.72,-7.84],["2022-05-26",1.12,1.64,12.86],["2022-08-25",1.38,1.43,-13.51],["2022-11-21",1.32,2.01,6.77],["2023-03-02",1.38,1.55,-0.95],["2023-06-01",0.59,1.09,3.98],["2023-08-31",0.88,1.44,21.25],["2023-11-30",1.23,1.62,-5.19],["2024-02-29",1.48,1.97,31.62],["2024-05-30",1.00,1.04,-17.87],["2024-08-29",1.49,1.69,4.33],["2024-11-26",1.84,1.92,-12.25],["2025-02-27",2.31,2.42,-4.70],["2025-05-29",1.50,1.41,-2.08],["2025-08-28",2.09,2.10,-8.88],["2025-11-25",2.26,2.35,5.83],["2026-02-26",3.32,3.61,21.93],["2026-05-28",2.79,4.63,32.76],["2026-09-01",4.72,6.76,15.81]];
+
+
+
+/* Įmonės: pros/cons – fundamentai ir analitikai; trig – prieš ataskaitą žinomi trigeriai (taškai prie 50) */
+const COMPANIES = [
+ {t:"HPE",n:"Hewlett Packard Enterprise",day:"Pr 23",time:"~23:00",eps:1.28,rev:14.4,whisper:null,
+  pros:["Užsakymai +42 % per metus, rekordinis užsakymų portfelis","Juniper integracija lenkia planą","Įmonės prognozė buvo aukščiau analitikų (EPS 1,12–1,22 $ vs 1,06 $)","Zacks modelis prognozuoja viršijimą"],
+  cons:["Tiekimo trūkumas stabdo pristatymus","Bendroji marža (rekordinė 40 %) turėtų grįžti žemyn","Akcija nuo metų pradžios +93 % – daug kas jau įkainota","DI aparatinės įrangos nuotaikos po Nvidia blogos"],
+  trig:[{d:-3,t:"Didelis kilimas iki ataskaitos (+93 % per metus)"},{d:-3,t:"DI serverių sektorius parduodamas net po gerų rezultatų"},{d:+2,t:"Įmonės prognozė aukščiau konsensuso"}],
+  key:"Ar užsakymų portfelis virsta pajamomis ir kokia marža.",srcs:[["Earnings Whispers","https://finviz.com/news/422868/hpes-street-beating-bar-rests-on-whether-supply-can-unlock-record-ai-backlog"],["Trefis","https://www.trefis.com/stock/hpe/articles/626668/is-hpe-s-ai-server-boom-turning-into-cash/2026-11-19"]]},
+ {t:"ZM",n:"Zoom",day:"Pr 23",time:"~23:00",eps:1.49,rev:1.28,whisper:"1,55 $",
+  pros:["Verslo klientų pajamos +7,8 % – sparčiausiai per 3 metus","Būsimi užsakymai (RPO) +14 %","Pastarąjį ketvirtį viršijo ir pakėlė prognozę"],
+  cons:["Bendras augimas tik ~4 %","Prarandamas didelis „white-label“ klientas","DI kaštai mažina maržas","Konsensusas jau virš įmonės prognozės viršutinės ribos, whisper dar aukščiau"],
+  trig:[{d:-2,t:"Konsensusas ir whisper virš įmonės prognozės – kartelė aukšta"}],
+  key:"Verslo segmento augimas ir RPO.",srcs:[["Earnings Whispers","https://finviz.com/news/422873/zooms-enterprise-inflection-faces-its-next-test-as-white-label-churn-and-ai-costs-build"]]},
+ {t:"ADI",n:"Analog Devices",day:"An 24",time:"14:00",eps:3.89,rev:4.32,whisper:"virš prognozės ribos",
+  pros:["Analitikai: 27 „pirkti“, 6 „laikyti“, 0 „parduoti“","Mediana tikslinė kaina 487 $ (+16 %)","Pajamos +40 % per metus, duomenų centrai","Įprotis pateikti prognozę aukščiau lūkesčių","Nuolat superka akcijas, skola vidutinė"],
+  cons:["Whisper virš įmonės prognozės viršutinės ribos","Akcija per metus +66 %, P/E ~43","Nauja skola didina palūkanų naštą","Bendroji marža (~74 %) – reikia patvirtinimo"],
+  trig:[{d:-3,t:"Whisper virš prognozės ribos – reikia didelio viršijimo"},{d:-2,t:"Stiprus kilimas per metus"},{d:+3,t:"Istoriškai pateikia prognozę aukščiau lūkesčių"}],
+  key:"Ateinančio ketvirčio prognozė ir marža.",srcs:[["Earnings Whispers","https://finviz.com/news/423365/analog-devices-faces-a-whisper-above-its-own-guidance-as-data-center-boom-tests-margins"],["Trefis: analitikai","https://www.trefis.com/data/companies/ADI?from=AMPH-2026-06-18"]]},
+ {t:"BBY",n:"Best Buy",day:"An 24",time:"~14:00",eps:1.48,rev:9.84,whisper:"1,53 $",
+  pros:["Praeitą ketvirtį palyginamieji pardavimai +4,1 % vs ~1 % tikėtasi","Pakėlė visas metines prognozes","Viršijo prognozes 4 ketvirčius iš eilės"],
+  cons:["Nauja vadovybė: pirma ataskaita naujo CEO (nuo lapkr. 1 d.)","Akcija +29 % nuo praeitos ataskaitos – kartelė aukšta","Muitai ir atsargūs vartotojai"],
+  trig:[{d:-4,t:"Didelis kilimas prieš ataskaitą (+29 %) – „parduok naujieną“ rizika"},{d:-1,t:"Naujas CEO – neaiškus tonas dėl prognozės"}],
+  key:"Šventinio ketvirčio prognozė.",srcs:[["Earnings Whispers","https://finviz.com/news/423370/best-buys-first-report-under-new-ceo-tests-whether-tv-revival-can-offset-computing-slowdown"]]},
+ {t:"MDT",n:"Medtronic",day:"An 24",time:"~13:45",eps:1.34,rev:9.47,whisper:"1,37 $",
+  pros:["Stipriausias organinis augimas per ~8 metus","Metų viduryje pakėlė prognozę","Analitikai dar nepatikėjo pakėlimu – konsensusas žemiau įmonės prognozės"],
+  cons:["Pelnas vienai akcijai −1,5 % per metus","MiniMed atskyrimo poveikis","Piper Sandler sumažino tikslinę kainą"],
+  trig:[{d:+3,t:"Konsensusas žemiau įmonės prognozės – kartelė žema"}],
+  key:"Ar ~7 % organinis augimas išlieka.",srcs:[["Earnings Whispers","https://finviz.com/news/423378/medtronics-first-clean-quarter-since-its-extra-week-tests-whether-acceleration-is-real"]]},
+ {t:"DELL",n:"Dell Technologies",day:"An 24",time:"~23:00",eps:6.59,rev:49.2,move:"±7 %",whisper:null,
+  pros:["Rekordinis DI užsakymų portfelis 95 mlrd. $, užsakymai 60,9 mlrd. $ per ketvirtį","Bernstein „Outperform“, tikslas 650 $ (+103 %); Citi „Buy“ 550 $","Pelnas turėtų augti +154 % per metus","Akcijų supirkimai"],
+  cons:["Atminties (DRAM) trūkumas ir kaštai spaudžia maržas","Dell vis daugiau skolina savo klientams – pinigų srautas atsilieka","Morgan Stanley sumažino tikslą iki 403 $","Didelė skola, nemaži vadovų akcijų pardavimai per 3 mėn."],
+  trig:[{d:+3,t:"Akcija −36 % nuo spalio viršūnės – kartelė žema"},{d:-5,t:"Po Nvidia rinka parduoda net gerus DI rezultatus"},{d:-2,t:"Vadovų akcijų pardavimai"}],
+  key:"DI serverių pajamos (~19 mlrd. $) ir ar nekeičia 192 mlrd. $ metinės prognozės.",srcs:[["TIKR: Bernstein","https://www.tikr.com/blog/dell-has-tumbled-since-september-why-bernstein-still-sees-103-upside"],["Tradestie: įkainotas judesys","https://tradestie.com/news/dell-earnings-nov-24-7-expected-move-659-eps-consensus-20261124/"],["Simply Wall St: rizikos","https://simplywall.st/stocks/us/tech/nyse-dell/dell-technologies?blueprint=3632204"]]},
+ {t:"WDAY",n:"Workday",day:"An 24",time:"~23:00",eps:2.74,rev:2.69,whisper:"2,83 $",
+  pros:["DI produktų metinės pajamos ~600 mln. $ (+200 %)","Pigi: ateities P/E ~17, žemiau sektoriaus","Pelningumas paprastai viršija lūkesčius"],
+  cons:["Vadovybės kaita: CEO Eschenbachas pasitraukė, grįžo įkūrėjas Bhusri","KeyBanc ir Piper Sandler sumažino reitingus","DI mažina darbuotojų skaičių, o Workday ima mokestį už darbuotoją","Augimas lėtėja kasmet; akcija −17 % per metus","Grynųjų (661 mln. $) mažiau nei trumpalaikės skolos (999 mln. $)"],
+  trig:[{d:-3,t:"Vadovybės nestabilumas ir įkūrėjų akcijų pardavimai"},{d:-2,t:"Reitingų mažinimai prieš ataskaitą"},{d:-1,t:"Whisper ~3 % virš konsensuso"},{d:+2,t:"Akcija jau nukritusi – kartelė žemesnė"}],
+  key:"Užsakymai antrąjį pusmetį ir 2028 m. prognozė.",srcs:[["Earnings Whispers","https://finviz.com/news/423401/workdays-promised-second-half-ai-bookings-surge-faces-its-first-real-test"],["Barchart: KeyBanc","https://www.webull.com/news/15780130891998208"],["Trefis: rizikos","https://www.trefis.com/stock/wday/articles/626861/what-would-a-short-seller-say-about-workday/2026-11-19"]]},
+ {t:"ADSK",n:"Autodesk",day:"An 24",time:"~23:00",eps:3.07,rev:2.13,whisper:"3,16 $",
+  pros:["Analitikai „Strong Buy“, vidutinis tikslas 318 $ (+20 %)","Loop Capital lapkr. 13 d. pakėlė iki „Buy“","Bendroji marža ~92 %, supirkimai 3,3 mlrd. $ per 3 m.","Praeitą ketvirtį pakėlė prognozes"],
+  cons:["Akcija +15 % per mėnesį iki ataskaitos","Whisper virš prognozės viršutinės ribos","Aktyvistas Starboard kritikuoja išlaidas ir valdymą","Anksčiau vykdytas vidinis finansinės atskaitomybės tyrimas","MaintainX įsigijimas finansuotas 2 mlrd. $ trumpalaike skola"],
+  trig:[{d:-4,t:"Kilimas +15 % per mėnesį – „parduok naujieną“ rizika"},{d:-2,t:"Whisper virš prognozės ribos"},{d:-1,t:"Valdymo rizikos (aktyvistas, tyrimas)"}],
+  key:"Ar pakeltos metinės prognozės išsilaiko su MaintainX.",srcs:[["Earnings Whispers","https://finviz.com/news/423384/autodesks-raised-outlook-faces-its-first-test-as-maintainx-joins-the-numbers"],["Nasdaq/Fintel: Loop upgrade","https://www.nasdaq.com/articles/loop-capital-upgrades-autodesk-buy-hold"],["Yahoo: Starboard","https://finance.yahoo.com/news/autodesk-stock-outlook-wall-street-133540490.html"]]},
+ {t:"HPQ",n:"HP Inc.",day:"An 24",time:"~23:00",eps:0.75,rev:15.47,whisper:"0,90 $",
+  pros:["Rekordinės pajamos 15,7 mlrd. $ (+13 %)","Metinę prognozę pakėlė du kartus","Laisvas pinigų srautas 3,0–3,2 mlrd. $, žemas P/E"],
+  cons:["Kompiuterių vienetai −16 %, augimas tik dėl kainų","Atminties kaštai: marža krito iki 18,8 %","Analitikai atsargūs: dauguma „laikyti“, keli „parduoti“","Vadovybės neapibrėžtumas (BofA minėjo CEO paieškas)"],
+  trig:[{d:-3,t:"Whisper 0,90 $ vs 0,75 $ konsensusas – labai aukšta kartelė"},{d:-2,t:"Vadovybės neapibrėžtumas"},{d:-1,t:"Analitikų nuotaikos atsargios"}],
+  key:"Marža ir 2027 m. prognozė su atminties kaštais.",srcs:[["Earnings Whispers","https://finviz.com/news/423393/hps-memory-cost-trough-meets-a-whisper-number-above-its-own-guidance"],["Yahoo/BofA","https://finance.yahoo.com/markets/stocks/articles/hp-set-deliver-solid-q2-200400199.html"]]},
+ {t:"DE",n:"Deere",day:"Tr 25",time:"~13:00",eps:4.07,rev:10.30,whisper:"4,30 $",
+  pros:["Pakėlė metinę pelno prognozę, stiprūs užsakymai visuose segmentuose","Statybos ir miškininkystė +18 %, maži traktoriai +15 %","Vadovybė: 2026 m. – žemės ūkio ciklo dugnas"],
+  cons:["Pajamos turėtų kristi ~17 %","Didelė skola (finansinių paslaugų padalinys)","Tikslusis žemės ūkis silpnas","Pernai lapkritį nauja metinė prognozė nuvylė (akcija −5,7 %)","Whisper 4,30 $ gerokai virš 4,07 $"],
+  trig:[{d:-2,t:"Whisper gerokai virš konsensuso"},{d:-1,t:"Pernai metinė prognozė nuvylė"}],
+  key:"2027 finansinių metų prognozė.",srcs:[["Earnings Whispers","https://www.earningswhispers.com/article/DE/23254"],["Bloomberg: 2025 m. prognozė","https://www.bloomberg.com/news/articles/2025-11-26/deere-outlook-falls-short-as-farm-rebound-remains-elusive"]]}
+];
+/* Pagrindinės pasaulio įmonės: paskutinė ataskaita + kas toliau. eps/est – paskutinė ataskaita, move – akcija kitą dieną */
+const MAJORS = [
+ {t:"NVDA",n:"Nvidia",al:"nvidia",sec:"Puslaidininkiai · DI",next:"~2027 vas. pab. (apytiksliai)",last:"2026-11-17",eps:2.68,est:2.47,rev:"115,8 vs ~109 mlrd. $",guide:"Q4 pajamos 130 mlrd. $ ±3 % (lūkesčiai ~125 mlrd. $); 2028 m. augimas ~75 %",move:-2.89,
+  pros:["Pajamos +103 % per metus, duomenų centrai 107,6 mlrd. $","Prognozė aukščiau lūkesčių","150 mlrd. $ papildomas akcijų supirkimas"],
+  cons:["Vadovybės krizė: Jensen Huang pasitraukė, laikinoji CEO – Colette Kress","Q4 marža krenta iki 71–72 %","118 mlrd. $ garantijų klientams","Kinija neįtraukta į prognozes"],
+  watch:"Ar marža atsigauna ir kas bus nuolatinis CEO.",
+  srcs:[["24/7 Wall St","https://247wallst.com/cards/nvidia-q3-2027-earnings-nvda-01m7nph36m2fmpwcfatxg16f2z"],["Newsquawk","https://www.newsquawk.com/headlines/nvidia-corporation-nvda-q3-fy27-usd-adj-eps-268-exp-248-revenue-1158bln-exp-109bln"]]},
+ {t:"AAPL",n:"Apple",al:"apple",sec:"Technologijos",next:"~2027 sausio pab. (apytiksliai)",last:"2026-11-02",eps:2.10,est:1.99,rev:"114,5 vs 113,4 mlrd. $",guide:"Gruodžio ketv. augimas 7–10 % (lūkesčiai 11,4 %) – žemiau",move:-1.9,
+  pros:["Pajamos ir pelnas viršijo prognozes","Paslaugų marža aukšta, bendroji marža 45–46 %"],
+  cons:["Prognozė žemiau lūkesčių","Naujas CEO John Ternus: atminties kainos „precedento neturinčios“","Paslaugų augimas lėčiausias nuo 2022 m., Kinija silpna","Dalis pelno – vienkartiniai muitų grąžinimai"],
+  watch:"Šventinio ketvirčio pardavimai ir atminties kaštai.",
+  srcs:[["SimianX: Mag 7","https://www.simianx.ai/stories/magnificent-7-earnings-dates-results-tracker"]]},
+ {t:"MSFT",n:"Microsoft",al:"microsoft",sec:"Programinė įranga · debesija",next:"~2027 sausio pab. (apytiksliai)",last:"2026-10-28",eps:4.89,est:4.73,rev:"92,3 vs 90,7 mlrd. $",guide:"Kito ketv. pajamos 96,0–97,1 mlrd. $, Azure +49–50 %",move:-0.2,
+  pros:["Azure auga ~50 %","Pajamos ir pelnas viršijo prognozes","Investicijos (capex) šiek tiek sumažintos"],
+  cons:["GPU pajėgumų vėlavimai nukelia dalį augimo į 2027 m.","Laisvas pinigų srautas −27 %","Milžiniškos DI investicijos (~170 mlrd. $ per metus)"],
+  watch:"Azure augimas ir pinigų srautas.",
+  srcs:[["SimianX: Mag 7","https://www.simianx.ai/stories/magnificent-7-earnings-dates-results-tracker"]]},
+ {t:"GOOGL",n:"Alphabet (Google)",al:"alphabet google",sec:"Internetas · DI",next:"~2027 vas. pradž. (apytiksliai)",last:"2026-10-28",eps:2.67,est:3.02,rev:"127,6 vs 128,2 mlrd. $",guide:"2027 m. investicijos „smarkiai didės“",move:-12.6,
+  pros:["Didžiulė DI infrastruktūra ir TPU lustai","Paieška ir debesija – stiprios pozicijos"],
+  cons:["Nepasiekė pelno ir pajamų prognozių","Laisvas pinigų srautas neigiamas (−9 mlrd. $)","Ilgalaikė skola išaugo iki 125 mlrd. $ (buvo 22 mlrd. $)","Akcija krito labiausiai po ataskaitos nuo 2004 m."],
+  watch:"Ar investicijos pradeda atsipirkti, paieškos pajamos.",
+  srcs:[["SimianX: Mag 7","https://www.simianx.ai/stories/magnificent-7-earnings-dates-results-tracker"]]},
+ {t:"AMZN",n:"Amazon",al:"amazon",sec:"E. prekyba · debesija",next:"~2027 vas. pradž. (apytiksliai)",last:"2026-10-29",eps:1.89,est:1.96,rev:"201,9 vs 202,3 mlrd. $",guide:"Q4 pajamos 240–247 mlrd. $",move:-1.4,
+  pros:["AWS ir reklama auga","Šventinis ketvirtis – sezoninis stiprumas"],
+  cons:["Nepasiekė pelno ir pajamų prognozių","Laisvas pinigų srautas per 12 mėn. −42 mlrd. $","2027 m. investicijos bus dar didesnės"],
+  watch:"Šventinio ketvirčio pelningumas ir AWS augimas.",
+  srcs:[["SimianX: Mag 7","https://www.simianx.ai/stories/magnificent-7-earnings-dates-results-tracker"]]},
+ {t:"META",n:"Meta Platforms",al:"meta facebook",sec:"Socialiniai tinklai · DI",next:"~2027 sausio pab. (apytiksliai)",last:"2026-10-21",eps:null,est:null,rev:"64,6 vs 63,4 mlrd. $",guide:"Q4 pajamos 73–76 mlrd. $",move:-7.0,
+  pros:["Pajamos viršijo prognozes","Reklamos verslas auga"],
+  cons:["9,9 mlrd. $ teisinis susitarimas su 52 valstijomis","Veiklos marža nukrito iki 20 % (buvo 40 %)","Laisvas pinigų srautas neigiamas","Planuojamas balsavimo teisės neturinčių akcijų dividendas"],
+  watch:"Maržos atsigavimas ir investicijų dydis.",
+  srcs:[["SimianX: Mag 7","https://www.simianx.ai/stories/magnificent-7-earnings-dates-results-tracker"]]},
+ {t:"TSLA",n:"Tesla",al:"tesla",sec:"Elektromobiliai · robotai",next:"~2027 sausio pab. (apytiksliai)",last:"2026-10-21",eps:0.48,est:0.43,rev:"28,05 vs 27,9 mlrd. $",guide:"Investicijos sumažintos iki ~20 mlrd. $",move:-3.1,
+  pros:["Pelnas ir pajamos viršijo prognozes","Teigiamas laisvas pinigų srautas"],
+  cons:["Pajamos per metus nepaaugo","GAAP pelnas −44 %","Akcija krito po 4 ataskaitų iš eilės"],
+  watch:"Pardavimų augimas ir robotaksi/robotų naujienos.",
+  srcs:[["SimianX: Mag 7","https://www.simianx.ai/stories/magnificent-7-earnings-dates-results-tracker"]]},
+ {t:"AVGO",n:"Broadcom",al:"broadcom",sec:"Puslaidininkiai · DI",next:"2026-12-09 (patvirtinta)",last:"2026-09-02",eps:null,est:null,rev:"—",guide:"Q4 pajamos 34,8 mlrd. $ (+93 %), DI pajamos 21,7 mlrd. $; 2027 m. DI pajamos ~115 mlrd. $",move:null,
+  pros:["DI pajamos turėtų padvigubėti 2027 m.","Užsitikrinta tiekimo grandinė","Užsakomieji DI lustai Google, OpenAI, Meta"],
+  cons:["Aukšti lūkesčiai ir vertinimas","DI sektorius po Nvidia parduodamas"],
+  watch:"DI pajamos vs 21,7 mlrd. $ prognozė (gruodžio 9 d.).",
+  srcs:[["Trefis","https://www.trefis.com/stock/avgo/articles/625174/the-dates-that-matter-most-for-broadcom-shareholders/2026-11-16"],["Broadcom","https://investors.broadcom.com/news-releases/news-release-details/broadcom-inc-announce-fourth-quarter-and-fiscal-year-2026"]]},
+ {t:"TSM",n:"TSMC",al:"tsmc taiwan semiconductor",sec:"Puslaidininkių gamyba",next:"~2027 sausio vid. (apytiksliai)",last:"2026-10-15",eps:4.60,est:4.46,rev:"46,7 vs 45,7 mlrd. $",guide:"Q4 pajamos 52,3–54,3 mlrd. $ (+58 %), metinė prognozė pakelta",move:-3.0,
+  pros:["Šešta rekordinė ketvirčio pelno reikšmė iš eilės","DI paklausa viršija pasiūlą","Needham pakėlė tikslą iki 560 $"],
+  cons:["Marža šiek tiek krenta (2 nm gamybos pradžia)","Milžiniškos investicijos ateinančius 3 metus","Akcija iki ataskaitos krito 11,5 %"],
+  watch:"Marža ir 2027 m. investicijų planas.",
+  srcs:[["CoinCentral","https://coincentral.com/why-is-taiwan-semiconductor-tsm-stock-down-after-a-record-quarter/"],["InvestingLive","https://investinglive.com/stocks/icymi-tsmc-profit-jumps-nearly-70-on-ai-demand-but-margin-outlook-weighs-on-shares/"]]},
+ {t:"ASML",n:"ASML",al:"asml",sec:"Lustų gamybos įranga (Europa)",next:"~2027 sausio pab. (apytiksliai)",last:"2026-10-14",eps:null,est:null,rev:"11,7 vs ~11,6 mlrd. €",guide:"2026 m. pajamos 44–45 mlrd. € (pakelta trečią kartą); 2027–28 m. pasiūla nespės už paklausos",move:-3.0,
+  pros:["Rekordinės pajamos ir pelnas","Metinė prognozė keliama trečią kartą","Klientai prašo daugiau įrangos nei ASML gali pagaminti"],
+  cons:["Didelė dalis gero jau buvo įkainota","Kinijos pajamos mažėja","Pasiūlos ribos stabdo augimą"],
+  watch:"Užsakymai (bookings) ir 2027 m. prognozė.",
+  srcs:[["InvestingLive","https://investinglive.com/stocks/asml-says-2027-and-2028-supply-will-fall-short-of-demand-as-q3-sales-hit-a-record/"],["AllInvestView","https://www.allinvestview.com/earnings/ASML.AS/q3-2026/"]]},
+ {t:"JPM",n:"JPMorgan Chase",al:"jpmorgan jp morgan chase",sec:"Bankai",next:"~2027 sausio vid. (apytiksliai)",last:"2026-10-13",eps:5.75,est:5.94,rev:"50,9 mlrd. $ (žemiau lūkesčių)",guide:"Grynosios palūkanų pajamos 2026 m. pakeltos iki ~106,2 mlrd. $",move:null,
+  pros:["Pakėlė grynųjų palūkanų pajamų prognozę","Grąža iš kapitalo ~20 %","Visi segmentai augo"],
+  cons:["Retas pelno prognozės nepasiekimas","Obligacijų prekybos pajamos silpnesnės","Akcijų supirkimai smarkiai sumažinti"],
+  watch:"Palūkanų pajamos ir išlaidos, Dimono komentarai apie ekonomiką.",
+  srcs:[["TradingNews","https://www.tradingnews.com/news/jpm-reverses-3-percent-premarket-drop-to-336-usd-as-20-percent-rotce-and-107b-usd-2027-nii-outlook"],["Zacks","https://www.zacks.com/stock/news/3006070/jpm-q3-earnings-lag-on-lower-fixed-income-markets-ib-offer-support"]]},
+ {t:"LLY",n:"Eli Lilly",al:"eli lilly",sec:"Farmacija",next:"~2027 vas. pradž. (apytiksliai)",last:"2026-10-29",eps:7.48,est:6.67,rev:"24,4 vs ~22,6 mlrd. $",guide:"2026 m. pajamos pakeltos iki 91–92 mlrd. $ (buvo 85–87)",move:4.0,
+  pros:["Pajamos +39 %, Mounjaro +65 %, Zepbound +49 %","Didelis metinės prognozės pakėlimas","Nauji vaistai (Foundayo, retatrutide) – stiprus vamzdynas"],
+  cons:["Kainos krenta (~−15 %), augimas tik dėl apimčių","Konkurencija su Novo Nordisk tabletėmis","Analitikų prognozės labai skiriasi (nuo 5,38 iki 7,11 $)"],
+  watch:"Vaistų kainos ir naujų vaistų pardavimai.",
+  srcs:[["24/7 Wall St","https://247wallst.com/cards/eli-lilly-q3-2026-earnings-lly-01m63nk1x2d2k0eyrf4m78fs52"],["Zacks","https://www.zacks.com/stock/news/3018734/lly-stock-jumps-as-q3-earnings-beat-estimates-2026-sales-view-raised"]]}
+];
+const MAJOR_NOTES={JPM:"Akcija iškart −3,9 %, vėliau dieną atsigavo iki +0,6 %",LLY:"Šaltiniai nesutaria dėl konsensuso (5,38–7,11 $); naudojama 6,67 $",ASML:"Amsterdame +2 %, JAV −3,9 %",META:"Palyginamos EPS prognozės nėra dėl teisinio mokesčio",AVGO:"Paskutinės ataskaitos reakcijos šaltiniuose neradau"};
+/* ===== Kainos, analitikai, kripto (atnaujinama kasdien per db) ===== */
+let DATA_DATE="2026-11-22", WEEK_DATE="2026-11-22";
+const RLT={"Strong Buy":"Stipriai pirkti","Buy":"Pirkti","Hold":"Laikyti","Sell":"Parduoti","Strong Sell":"Stipriai parduoti"};
+const PRICES={
+ NVDA:{p:125.53,ch:-14.01,d:"2026-11-20",r:"Buy",n:63,tg:244.18,lo:130,hi:425,dist:[34,11,16,0,2]},
+ AAPL:{p:342.56,ch:-1.90,d:"2026-11-20",r:"Buy",n:45,tg:345.63,lo:250,hi:425,dist:[20,6,13,3,3]},
+ MSFT:{p:484.52,ch:-2.77,d:"2026-11-20",r:"Strong Buy",n:58,tg:636.12,lo:440,hi:870,dist:[41,13,4,0,0]},
+ GOOGL:{p:265.29,ch:-2.70,d:"2026-11-20",r:"Strong Buy",n:58,tg:397.13,lo:300,hi:500,dist:[43,10,5,0,0]},
+ AMZN:{p:246.82,ch:-4.10,d:"2026-11-20",r:"Strong Buy",n:62,tg:326.51,lo:230,hi:405,dist:[45,14,3,0,0]},
+ META:{p:560.84,ch:-5.93,d:"2026-11-20",r:"Strong Buy",n:62,tg:848.23,lo:650,hi:1050,dist:[45,10,6,0,1]},
+ TSLA:{p:380.11,ch:0.10,d:"2026-11-17",r:"Buy",n:44,tg:412.48,lo:null,hi:null,dist:null},
+ AVGO:{p:304.41,ch:-12.19,d:"2026-11-20",r:"Strong Buy",n:51,tg:526.47,lo:398.47,hi:660,dist:[40,8,3,0,0]},
+ TSM:{p:318.71,ch:-9.48,d:"2026-11-20",r:"Strong Buy",n:21,tg:586.69,lo:440,hi:1000,dist:[14,6,1,0,0]},
+ ASML:{p:1266.22,ch:-6.63,d:"2026-11-20",r:"Strong Buy",n:41,tg:2105,lo:848.2,hi:2786,dist:[31,7,2,0,1],note:"Tikslai atnaujinti spalio 16 d. – dar neatspindi lapkričio kritimo"},
+ JPM:{p:310.53,ch:-3.03,d:"2026-11-20",r:"Buy",n:26,tg:373.48,lo:312,hi:425,dist:[10,5,11,0,0]},
+ LLY:{p:1347.11,ch:-0.30,d:"2026-11-20",r:"Buy",n:31,tg:1470.06,lo:940,hi:1700,dist:[20,5,4,1,1]},
+ HPE:{p:40.91,ch:-10.07,d:"2026-11-20",r:"Buy",n:24,tg:70.58,lo:52,hi:88,dist:[10,5,9,0,0]},
+ ZM:{p:99.80,ch:2.15,d:"2026-11-13",r:"Buy",n:30,tg:118.58,lo:79,hi:135,dist:[17,2,10,1,0]},
+ ADI:{p:345.92,ch:-8.35,d:"2026-11-20",r:"Strong Buy",n:34,tg:474.47,lo:365,hi:675,dist:[25,6,4,0,0]},
+ BBY:{p:97.95,ch:-1.33,d:"2026-11-20",r:"Hold",n:26,tg:91.29,lo:71,hi:110,dist:[4,0,20,1,1]},
+ MDT:{p:101.80,ch:-2.90,d:"2026-11-06",r:"Buy",n:30,tg:104.62,lo:85,hi:121,dist:[17,3,10,0,0]},
+ DELL:{p:313.11,ch:-3.00,d:"2026-11-18",r:"Buy",n:29,tg:590,lo:490,hi:700,dist:[14,6,9,0,0]},
+ WDAY:{p:208.50,ch:-0.71,d:"2026-10-26",r:"Buy",n:42,tg:209.25,lo:92,hi:275,dist:[14,5,20,2,1]},
+ ADSK:{p:252.32,ch:-2.17,d:"2026-11-03",r:"Buy",n:36,tg:307.54,lo:215,hi:375,dist:[23,6,7,0,0]},
+ HPQ:{p:34.09,ch:1.34,d:"2026-10-26",r:"Hold",n:18,tg:27.52,lo:19,hi:33.8,dist:[2,0,9,3,4]},
+ DE:{p:641.25,ch:-0.76,d:"2026-10-26",r:"Buy",n:25,tg:694.01,lo:500,hi:813.18,dist:[11,5,9,0,0]}
+};
+/* Trumpasis laikotarpis: kitos ataskaitos konsensusas */
+const NEXTQ={
+ NVDA:{d:"~2027-02-25",eps:null,rev:"~130 mlrd. $ (įmonės prognozė)"},
+ AAPL:{d:"2027-01-28",eps:2.92,rev:"156,4"},
+ MSFT:{d:"2027-01-27",eps:4.86,rev:"96,7"},
+ GOOGL:{d:"2027-02-03",eps:3.22,rev:"139,4"},
+ AMZN:{d:"2027-02-04",eps:2.41,rev:"245,0"},
+ META:{d:"2027-01-27",eps:8.30,rev:"75,1"},
+ TSLA:{d:"2027-01-27",eps:0.45,rev:"29,2"},
+ AVGO:{d:"2026-12-09",eps:null,rev:"34,8 mlrd. $ (įmonės prognozė)"},
+ TSM:{d:"2027-01-14",eps:5.17,rev:"52,9"},
+ ASML:{d:"~2027-01-27",eps:null,rev:null},
+ JPM:{d:"2027-01-12",eps:5.88,rev:"51,0"},
+ LLY:{d:"2027-02-03",eps:11.21,rev:"24,7"}
+};
+const CRYPTO=[
+ {t:"BTC",n:"Bitcoin",p:64693,ch1:0.2,ch7:-14,d:"2026-11-18",ath:126198,athd:"2025-10-06",
+  kv:[["Baimės ir godumo indeksas","10 / 100 – didžiulė baimė (lapkr. 15–16 d.)"],["JAV BTC ETF srautai","−1,07 mlrd. $ per savaitę iki lapkr. 13 d.; 7 dienos iš eilės minusas (−1,91 mlrd. $)"],["Palaikymas","60 000 $; 58 570 $ (metų žemuma, liepos 1 d.)"],["Pasipriešinimas","65 000 $; ~67 800 $ (200 savaičių vidurkis); 70 000 $"]],
+  short:[["Citi (lapkr. 18 d.)","Pirmiausia reikia išsilaikyti virš 60 000 $ ir susigrąžinti 65 000 $; tada atsiveria kelias į 70 000 $"],["Strive CEO Matt Cole","Tikisi atšokimo iki 90 000 $ iki vasario"],["Didžiulės baimės istorija","Po 26 ankstesnių 10 balų rodmenų BTC mediana per 90 d. buvo tik +1,4 % – atšokimas negarantuotas"]],
+  long:[["Citi, 12 mėn. tikslas","99 532 $ (sumažino nuo 113 000 $, lapkr. 18 d.)",99532],["Standard Chartered, 2026 m. pabaiga","100 000 $ (vasario prognozė, dabar mažai tikėtina)",100000],["Standard Chartered, 2030 m.","500 000 $",500000]],
+  week:["Tr 15:30 – JAV PCE: karšta infliacija → BTC dažniausiai krenta kartu su Nasdaq","Kt – JAV šventė: mažas likvidumas, staigūs judesiai","Gruodžio 8–9 d. Fed: ~99 % tikimybė kelti – stiprina dolerį ir spaudžia kriptą"],
+  comp:[{d:-3,t:"ETF nutekėjimai tęsiasi – didieji investuotojai mažina pozicijas"},{d:-3,t:"Fed kelia palūkanas, doleris stiprus"},{d:-2,t:"Kaina žemiau 200 savaičių vidurkio (~67 800 $)"},{d:+2,t:"Didžiulė baimė (10/100) – istoriškai dažnai būna netoli dugno"},{d:+1,t:"Bankų 12 mėn. tikslai vis dar ~50 % aukščiau kainos"}],
+  pros:["Bankai ilguoju laikotarpiu vis dar tikisi ~100 000 $","Baimė ekstremali – pardavėjų gali greitai pritrūkti","Įmonės ir universitetai (pvz., Harvard) pozicijų nemažina"],
+  cons:["ETF investuotojai traukiasi – vidutinis ETF pirkėjas nuostolyje","Fed kelia palūkanas","Kaina −49 % nuo rekordo, pralaužtas 200 savaičių vidurkis","Kalnakasiai (MARA) parduoda BTC"],
+  srcs:[["Coinotag: Citi tikslas","https://en.coinotag.com/citi-cuts-bitcoin-btc-target-to-99532-on-etf-outflows"],["The Block: ETF srautai","https://www.theblock.co/news/markets/2026-11-14-bitcoin-etfs-lose-1-billion-for-the-second-week-in-a-row-as-crypto-funds-except-one-440337"],["CoinStats: savaitės lygiai","https://coinstats.app/news/b85827cf89a2ad1dc77ecafe2e3145814ed25908605f2e8e8327c9c0f466440f_Bitcoin-week-ahead-the-key-dates-from-November-16-to-22/"],["Axel Adler: baimės indeksas","https://axeladlerjr.com/black-weekend-bitcoin-falls-as-market-fear-hits-its-highest-level.md"]]},
+ {t:"SOL",n:"Solana",p:72.85,ch1:1.95,ch7:-9,d:"2026-11-17",ath:null,
+  kv:[["Žemiausia per 4 mėn.","67,41 $"],["JAV SOL ETF srautai","6 savaitės nutekėjimų; lapkr. 16 d. pirmas įplaukimas nuo spalio 21 d. (+11,7 mln. $)"],["Vidutinė ETF pirkėjų kaina","~115 $ – dauguma ETF turėtojų nuostolyje"],["Pasipriešinimas","75,42 $; 80 $; ~98 $ (200 d. vidurkis)"]],
+  short:[["TradingNews (techninė)","Susigrąžinus 75,42 $ atsiveria 80 $; 7-a savaitė nutekėjimų grąžintų 67,41 $ žemumą"],["Jesse Olson (analitikas)","Perparduota, bet „kritimo tendencija, kol neįrodyta kitaip“"],["Breakpoint (lapkr. 15–17 d.)","Solana 1.0 paskelbimas: SOL +7 % per kelias dienas, bet per savaitę vis tiek −9 %"]],
+  long:[["Standard Chartered, 2026 m. pabaiga","135 $ (vasario prognozė)",135],["Standard Chartered, 2029 m.","1 200 $",1200],["Bitwise, 2031 m.","1 100 $",1100]],
+  week:["Tr 15:30 – JAV PCE: SOL juda kaip BTC, tik stipriau","Kt – JAV šventė: mažas likvidumas","Kinijos centrinis bankas sustabdė Solana renginius šalyje – reguliavimo rizika"],
+  comp:[{d:-3,t:"Dauguma ETF turėtojų nuostolyje (pirko ~115 $) – pardavimų spaudimas"},{d:-2,t:"SOL krenta stipriau nei BTC, kai rinka baiminasi"},{d:-1,t:"Kinijos reguliavimo rizika"},{d:+2,t:"ETF srautai pradeda gerėti, Solana 1.0 naujienos"},{d:+1,t:"Perparduota (RSI žemas)"}],
+  pros:["36 % pasaulinių decentralizuotų biržų apyvartos (III ketv.)","Solana 1.0 – tinklo brandos ženklas","Ilgalaikiai tikslai labai aukšti (1 100–1 200 $)"],
+  cons:["−30 % per 2026 m., silpniausia iš didžiųjų kriptovaliutų","ETF pirkėjai nuostolyje – gali parduoti atsigavus","Kinija tikrina Solana veiklą"],
+  srcs:[["TradingNews: SOL lygiai","https://www.tradingnews.com/news/solana-holds-72-usd-after-4-month-low-a-75-usd-reclaim"],["Analytics Insight: ETF įplaukos","https://www.analyticsinsight.net/news/crypto-market-today-xrp-solana-near-rise-as-bitcoin-holds-near-usd-64500"],["CoinCentral: ETF kaina","https://coincentral.com/?p=217082"],["The Block: SC prognozės","https://www.theblock.co/news/markets/2026-02-12-standard-chartered-bitcoin-50000-ether-1400-rebound-389609"]]}
+];
+
+
+
+/* ================= BENDRA ================= */
+const DAYNAMES={"2026-11-23":"Pirmadienis, lapkričio 23","2026-11-24":"Antradienis, lapkričio 24","2026-11-25":"Trečiadienis, lapkričio 25","2026-11-26":"Ketvirtadienis, lapkričio 26","2026-11-27":"Penktadienis, lapkričio 27"};
+const DAYNOTES={"2026-11-23":"Europos ir JAV PMI","2026-11-24":"Ifo · vartotojų pasitikėjimas · Dell","2026-11-25":"Pagrindinė diena: PCE","2026-11-26":"JAV rinkos uždarytos","2026-11-27":"JAV rinkos dirba trumpiau"};
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const fmt=n=>String(Math.round(n));
+const sg=x=>x>0?1:x<0?-1:0;
+function postScore(c,a,typ,d){return clamp(50+d*((a-c)/typ)*18,10,90);}
+function pillCls(s){return s>=55?"up":s<=45?"dn":"flat";}
+function lean(s){if(s>=65)return"kilti labiau tikėtina";if(s>=55)return"lengvas polinkis kilti";if(s>45)return"neutralu";if(s>35)return"lengvas polinkis kristi";return"kristi labiau tikėtina";}
+function arrow(s){return s>=55?"↑":s<=45?"↓":"→";}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function store(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function load(k){try{return JSON.parse(localStorage.getItem(k)||"null");}catch(e){return null;}}
+function num(v){const x=parseFloat(String(v).replace(",","."));return isNaN(x)?null:x;}
+let regimeNow=load("radaras-regime")||"inf";
+const effDir=d=>(d.g&&regimeNow==="aug")?-d.d:d.d;
+let impFilter=2,ccyFilter=null,openId="pce";
+const actuals=load("radaras-actuals")||{};
+const consOver=load("radaras-cons")||{};
+const compIn=load("radaras-comp")||{};
+let sampleFn=null;
+
+function gaugeHTML(name,s,why){
+  return `<div class="gauge"><span class="name">${esc(name)}</span><div class="gbar" role="img" aria-label="${esc(name)} ${fmt(s)} iš 100"><span class="m" style="left:${s}%"></span></div><span class="sc">${fmt(s)}</span>${why?`<span class="why">${esc(why)}</span>`:""}</div>`;
+}
+function mainScore(ev){
+  const a=actuals[ev.id];
+  if(a!=null&&ev.calc){const c=ev.calc.cons??consOver[ev.id];if(c!=null){const d=ev.calc.dirs[0];return{s:postScore(c,a,ev.calc.typ,effDir(d)),a:d.a,post:true};}}
+  if(ev.scores&&ev.scores.length)return{s:ev.scores[0].s,a:ev.scores[0].a,post:false};
+  return null;
+}
+
+/* ================= KALENDORIUS ================= */
+function renderContext(){
+  const c=CONTEXT.slice(0,4);
+  document.getElementById("context").innerHTML=c.map(x=>`<div class="ctx"><div class="k">${esc(x.k)}</div><div class="v">${esc(x.v)}</div><div class="n">${esc(x.n)}</div></div>`).join("");
+}
+function renderCcy(){
+  const list=[...new Set(EVENTS.map(e=>e.ccy))];
+  const el=document.getElementById("ccyChips");
+  el.innerHTML=`<button class="chip" data-ccy="" aria-pressed="${ccyFilter===null}">Visos valiutos</button>`+list.map(c=>`<button class="chip" data-ccy="${c}" aria-pressed="${ccyFilter===c}">${c}</button>`).join("");
+  el.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{ccyFilter=b.dataset.ccy||null;renderCcy();renderDays();});
+}
+function detailHTML(ev){
+  const cons=(ev.cons||[]).slice(0,4);
+  const consT=cons.length?`<table><thead><tr><th>Rodiklis</th><th class="num">Tikimasi</th><th class="num">Ankstesnis</th></tr></thead><tbody>${cons.map(r=>`<tr><td>${esc(r.m)}</td><td class="num mono">${esc(r.c)}</td><td class="num mono">${esc(r.p)}</td></tr>`).join("")}</tbody></table>${(ev.cons||[]).length>4?`<details><summary>Visi rodikliai (${ev.cons.length})</summary><table><tbody>${ev.cons.slice(4).map(r=>`<tr><td>${esc(r.m)}</td><td class="num mono">${esc(r.c)}</td><td class="num mono">${esc(r.p)}</td></tr>`).join("")}</tbody></table></details>`:""}`:`<p class="conf" style="margin:0">Skaičių nėra: kalba, šventė arba aprašomoji ataskaita.</p>`;
+  const fc=(ev.fc||[]).slice(0,3);
+  const fcH=fc.length?`<section><h3>Ką sako specialistai</h3><ul class="bul">${fc.map(f=>`<li><b>${esc(f.w)}:</b> ${esc(f.v)}</li>`).join("")}</ul></section>`:"";
+  const scen=ev.scen?`<section><h3>Kas nutiktų</h3><div class="scen"><div class="hot"><b>Jei aukščiau prognozės</b>${esc(ev.scen.hot)}</div><div class="cool"><b>Jei žemiau prognozės</b>${esc(ev.scen.cool)}</div></div></section>`:"";
+  const sc=(ev.scores||[]).length?`<section><h3>Balas prieš naujieną</h3>${ev.scores.slice(0,3).map(s=>gaugeHTML(s.a,s.s,lean(s.s))).join("")}${(ev.comp||[]).length?`<details><summary>Kodėl toks balas?</summary><div class="comp">${ev.comp.map(c=>`<div><span class="d ${c.d>0?"p":c.d<0?"n":"z"}">${c.d>0?"+":""}${c.d}</span><span>${esc(c.t)}</span></div>`).join("")}</div></details>`:""}<div class="conf">${esc(ev.conf||"")}</div></section>`:"";
+  let calc="";
+  if(ev.calc){
+    const c=ev.calc.cons??consOver[ev.id],a=actuals[ev.id];
+    const ci=ev.calc.cons==null?`<label for="cons-${ev.id}">Konsensusas<input id="cons-${ev.id}" inputmode="decimal" value="${consOver[ev.id]??""}"></label>`:"";
+    let out=`<div class="conf">Kai naujiena paskelbta, įvesk faktą${ev.calc.cons==null?" ir konsensusą (iš Forex Factory)":` (tikimasi ${esc(String(ev.calc.cons).replace(".",","))})`}.</div>`;
+    if(a!=null&&c!=null){
+      const z=(a-c)/ev.calc.typ;
+      out=`<div class="conf">Nuokrypis: ${z>0?"+":""}${z.toFixed(1)} įprasto${Math.abs(z)<0.5?" → beveik atitiko prognozę, judesys tikėtinas mažas":""}</div>`+ev.calc.dirs.map(d=>{const s=postScore(c,a,ev.calc.typ,effDir(d));return gaugeHTML(d.a,s,lean(s)+(d.g?` · režimas: ${regimeNow==="inf"?"infliacijos":"lėtėjimo"}`:""));}).join("");
+    }
+    calc=`<section class="calc"><h3>Po paskelbimo</h3><div class="inp">${ci}<label for="act-${ev.id}">${esc(ev.calc.label)}<input id="act-${ev.id}" inputmode="decimal" value="${a??""}"></label><button class="btn" data-calc="${ev.id}">Skaičiuoti</button><button class="btn ghost" data-clear="${ev.id}">Išvalyti</button></div>${out}</section>`;
+  }
+  const ai=`<section data-ai-wrap ${sampleFn?"":"hidden"}><div><button class="btn ghost" data-ai="${ev.id}">Paprašyti DI santraukos</button></div><div class="ai" id="ai-${ev.id}" hidden></div></section>`;
+  const more=`<details><summary>Plačiau ir šaltiniai</summary><p style="margin:0 0 8px;max-width:68ch">${esc(ev.text)}</p><div class="instr" style="margin-bottom:8px">${(ev.instr||[]).map(i=>`<span>${esc(i)}</span>`).join("")}</div><div class="src">${(ev.src||[]).map(k=>SRC[k]?`<a href="${SRC[k].u}" target="_blank" rel="noopener">${esc(SRC[k].t)}</a>`:"").join("")}</div></details>`;
+  return `<div class="detail" id="det-${ev.id}"><div class="col"><section><h3>Ko tikimasi</h3>${consT}</section>${fcH}${scen}</div><div class="col">${calc}${sc}${ai}${more}</div></div>`;
+}
+function renderDays(){
+  const host=document.getElementById("days");
+  host.innerHTML=Object.keys(DAYNAMES).map(d=>{
+    const evs=EVENTS.filter(e=>e.day===d&&e.imp>=impFilter&&(!ccyFilter||e.ccy===ccyFilter));
+    const rows=evs.map(ev=>{
+      const ms=mainScore(ev),open=openId===ev.id;
+      const pill=ms?`<span class="pill ${pillCls(ms.s)}" title="${esc(ms.a)}${ms.post?" po paskelbimo":" prieš paskelbimą"}">${arrow(ms.s)} ${esc(ms.a.length>8?ms.a.slice(0,8):ms.a)} ${fmt(ms.s)}${ms.post?" ✓":""}</span>`:`<span class="pill flat">—</span>`;
+      return `<button class="row" aria-expanded="${open}" aria-controls="det-${ev.id}" data-open="${ev.id}"><span class="t">${esc(ev.time)}</span><span class="ccy">${ev.ccy}</span><span class="imp l${ev.imp}" aria-label="Svarba ${ev.imp} iš 3"><i></i><i></i><i></i></span><span class="ttl">${esc(ev.title)}${ev.sub?`<small>${esc(ev.sub)}</small>`:""}</span>${pill}</button>${open?detailHTML(ev):""}`;
+    }).join("");
+    return `<div class="day"><div class="dayhead"><span class="h">${DAYNAMES[d]}</span><span class="note">${DAYNOTES[d]}</span></div>${rows||`<div class="empty">Pagal filtrą naujienų nėra.</div>`}</div>`;
+  }).join("");
+  host.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>{openId=openId===b.dataset.open?null:b.dataset.open;renderDays();});
+  host.querySelectorAll("[data-calc]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.calc,a=num(document.getElementById("act-"+id).value),ce=document.getElementById("cons-"+id);
+    if(ce){const c=num(ce.value);if(c!=null){consOver[id]=c;store("radaras-cons",consOver);}}
+    if(a!=null){actuals[id]=a;store("radaras-actuals",actuals);}
+    renderDays();
+  });
+  host.querySelectorAll("[data-clear]").forEach(b=>b.onclick=()=>{delete actuals[b.dataset.clear];delete consOver[b.dataset.clear];store("radaras-actuals",actuals);store("radaras-cons",consOver);renderDays();});
+  host.querySelectorAll("[data-ai]").forEach(b=>b.onclick=()=>askAI(b.dataset.ai,b));
+}
+
+/* ================= ĮMONĖS ================= */
+function preScore(c){return clamp(50+c.trig.reduce((a,x)=>a+x.d,0),15,85);}
+function verdict(s){return s>=55?{t:"KILTI (pirkti)",c:"up"}:s<=45?{t:"KRISTI (parduoti)",c:"dn"}:{t:"NEUTRALU",c:"flat"};}
+function compScore(c,inp){
+  if(inp.eps==null&&inp.rev==null&&!inp.g)return null;
+  const pre=preScore(c);let s=50+(pre-50)*0.5;const parts=[`prieš ataskaitą ${pre-50>=0?"+":""}${((pre-50)*0.5).toFixed(0)}`];
+  if(inp.eps!=null&&c.eps){const es=(inp.eps-c.eps)/Math.abs(c.eps)*100;const v=es>10?12:es>=0?-4:-10;s+=v;parts.push(`pelnas ${es>0?"+":""}${es.toFixed(1).replace(".",",")} % → ${v>0?"+":""}${v}`);}
+  const g={aukst:1,atit:0,zem:-1}[inp.g];
+  if(g!=null){s+=20*g;parts.push(`prognozė ${g>0?"+20":g<0?"−20":"0"}`);}
+  if(inp.rev!=null&&c.rev){const rs=(inp.rev-c.rev)/c.rev*100;const v=clamp(rs/1.5,-1,1)*8;s+=v;parts.push(`pajamos ${rs>0?"+":""}${rs.toFixed(1).replace(".",",")} % → ${v>0?"+":""}${v.toFixed(0)}`);}
+  return{s:clamp(s,10,90),parts};
+}
+function trigEvidence(){
+  const all=[...NVDA.map(r=>["NVDA",...r]),...DELL.map(r=>["DELL",...r])];
+  let big=0,bigU=0,sm=0,smD=0,beats=0,beatU=0;
+  all.forEach(([t,d,e,a,m])=>{const s=(a-e)/e*100;if(s>10){big++;if(m>0)bigU++;}else{sm++;if(m<0)smD++;}if(a>e){beats++;if(m>0)beatU++;}});
+  let dh=0;DELL.forEach(([d,e,a,m])=>{const s=(a-e)/e*100;if((s>10&&m>0)||(s<=10&&m<0))dh++;});
+  return{big,bigU,sm,smD,beats,beatU,dh,dn:DELL.length,tot:bigU+smD,n:all.length};
+}
+function majorHits(){let h=0,n=0;MAJORS.forEach(m=>{const c=majorCheck(m);if(c){n++;if(c.hit)h++;}});return h+" iš "+n;}
+function renderTriggers(){
+  const e=trigEvidence();const p=(a,b)=>Math.round(a/b*100)+" %";
+  document.getElementById("trigBox").innerHTML=`<h2 style="font-size:17px">Trigeriai, kurie kartojasi</h2>
+  <table><thead><tr><th>Trigeris</th><th>Ką rodo duomenys</th><th>Patikrinta?</th><th class="num">Taškai</th></tr></thead><tbody>
+  <tr><td><b>Pelnas viršija prognozę daugiau nei 10 %</b></td><td>Nvidia + Dell, 40 ataskaitų: kai viršijo &gt;10 %, akcija kilo <b>${e.bigU} iš ${e.big}</b> (${p(e.bigU,e.big)}); kai viršijo mažiau ar nepasiekė – krito <b>${e.smD} iš ${e.sm}</b> (${p(e.smD,e.sm)}). Paprasta taisyklė „viršijo → kyla“: tik ${e.beatU} iš ${e.beats} (${p(e.beatU,e.beats)}).</td><td class="ok">Taip. Slenkstis parinktas pagal Nvidia, Dell patikrinta atskirai: ${e.dh} iš ${e.dn}</td><td class="num mono">+12 / −4 / −10</td></tr>
+  <tr><td><b>Prognozė kitam ketvirčiui</b></td><td>BofA: aukštesnė prognozė → akcija kitą dieną ~3 p. p. geriau už indeksą; prognozės nepasiekimas → ~4 p. p. blogiau. Tyrimai rodo, kad sumažinta prognozė baudžiama labiau nei apdovanojamas viršijimas.</td><td class="na">Tyrimų duomenys, ne mano testas</td><td class="num mono">±20</td></tr>
+  <tr><td><b>Didelis kilimas prieš ataskaitą</b> (&gt;15 % per mėnesį)</td><td>Rinkos praktikai dažnai mini „pirk gandą, parduok naujieną“: gera žinia jau įkainota.</td><td class="na">Nepatikrinta</td><td class="num mono">−3…−4</td></tr>
+  <tr><td><b>Whisper virš konsensuso</b></td><td>Tikroji kartelė aukštesnė nei oficiali. Viršyti konsensusą nepakanka.</td><td class="na">Nepatikrinta</td><td class="num mono">−1…−3</td></tr>
+  <tr><td><b>Vadovybės problemos</b> (CEO kaita, akcijų pardavimai, aktyvistai)</td><td>Didina tikimybę, kad prognozė bus atsargi.</td><td class="na">Nepatikrinta</td><td class="num mono">−1…−3</td></tr>
+  </tbody></table>
+  <p class="conf" style="margin:6px 0 0">Imtis maža (40 ataskaitų, 2 įmonės). Papildomai: per paskutinį sezoną tarp pagrindinių įmonių 10 % trigeris pasitvirtino <b>${majorHits()}</b>. Laikyk tai polinkiu, ne garantija.</p>`;
+}
+function weeklyCard(c){
+    const inp=compIn[c.t]||{},r=compScore(c,inp),pre=preScore(c),s=r?r.s:pre,v=verdict(s);
+    const goodSum=c.pros.length,badSum=c.cons.length;
+    const why=`<details><summary>Kodėl ${v.t.toLowerCase()}?</summary>
+      <p style="margin:0 0 8px">${esc(c.n)} ${goodSum>=badSum?"fundamentaliai atrodo stipriai":"turi ir stiprybių, ir silpnybių"}, bet <b>kryptis po ataskaitos priklauso ne nuo to, ar įmonė gera, o nuo to, ar rezultatai viršys tai, kas jau įkainota</b>. ${r?"Dabartinis balas apskaičiuotas po ataskaitos:":"Prieš ataskaitą balą lemia šie trigeriai:"}</p>
+      <div class="comp">${c.trig.map(x=>`<div><span class="d ${x.d>0?"p":"n"}">${x.d>0?"+":""}${x.d}</span><span>${esc(x.t)}</span></div>`).join("")}</div>
+      ${r?`<p class="conf" style="margin:6px 0 0">Po ataskaitos: ${esc(r.parts.join(" · "))}</p>`:""}
+      <div class="pc"><div><h3>Kas gerai</h3><ul class="bul">${c.pros.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div><div><h3>Kas kelia riziką</h3><ul class="bul">${c.cons.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div></div>
+      <div class="src" style="margin-top:6px">${c.srcs.map(([t,u])=>`<a href="${u}" target="_blank" rel="noopener">${esc(t)}</a>`).join("")}</div>
+    </details>`;
+    return `<article class="card">
+      <div class="hd"><div><div class="nm">${esc(c.n)}</div><div class="tk">${c.t} · ${esc(c.day)} · ${esc(c.time)}</div></div><span class="pill ${v.c}">${arrow(s)} ${fmt(s)}${r?" ✓":""}</span></div>
+      ${priceBlock(c.t,{week:true,eps:c.eps,rev:c.rev})}
+      <div class="verdict ${v.c}">${r?"Po ataskaitos":"Polinkis prieš ataskaitą"}: <b>${v.t}</b></div>
+      <dl class="kv"><dt>Pelnas (EPS)</dt><dd>${c.eps.toFixed(2).replace(".",",")} $ <span class="conf">· &gt;10 % = ${(c.eps*1.1).toFixed(2).replace(".",",")} $</span></dd>
+      <dt>Pajamos</dt><dd>${c.rev.toFixed(2).replace(".",",")} mlrd. $</dd>
+      ${c.whisper?`<dt>Whisper</dt><dd>${esc(c.whisper)}</dd>`:""}${c.move?`<dt>Įkainotas judesys</dt><dd>${esc(c.move)}</dd>`:""}</dl>
+      <div style="font-size:13.5px"><b>Svarbiausia:</b> ${esc(c.key)}</div>
+      ${why}
+      <div class="calc"><div class="inp">
+        <label for="ce-${c.t}">EPS faktas<input id="ce-${c.t}" inputmode="decimal" value="${inp.eps??""}"></label>
+        <label for="cr-${c.t}">Pajamos, mlrd.<input id="cr-${c.t}" inputmode="decimal" value="${inp.rev??""}"></label>
+        <label for="cg-${c.t}">Prognozė<select id="cg-${c.t}"><option value="">nežinoma</option><option value="aukst" ${inp.g==="aukst"?"selected":""}>aukščiau lūkesčių</option><option value="atit" ${inp.g==="atit"?"selected":""}>atitinka</option><option value="zem" ${inp.g==="zem"?"selected":""}>žemiau lūkesčių</option></select></label>
+        <button class="btn" data-cc="${c.t}">Skaičiuoti</button></div>
+        ${r?gaugeHTML(c.t,r.s,lean(r.s)):`<div class="conf">Po ataskaitos įvesk skaičius ir pasirink, kokia prognozė.</div>`}
+      </div>
+    </article>`;
+}
+function money(x,dec){if(x==null)return"—";const d=dec??(x>=100?0:2);return x.toLocaleString("lt-LT",{minimumFractionDigits:d,maximumFractionDigits:d})+" $";}
+function pct(x,dec=1){return (x>0?"+":x<0?"−":"")+Math.abs(x).toFixed(dec).replace(".",",")+" %";}
+function daysOld(d){const a=new Date(DATA_DATE),b=new Date(d);return Math.round((a-b)/864e5);}
+function distBar(dist){if(!dist)return"";const tot=dist.reduce((a,b)=>a+b,0)||1,cols=["#1e7a46","#5aa86f","#a8a39a","#d98b6b","#b3412c"],lab=["Stipriai pirkti","Pirkti","Laikyti","Parduoti","Stipriai parduoti"];
+  return `<div class="dist" role="img" aria-label="${lab.map((l,i)=>l+" "+dist[i]).join(", ")}">${dist.map((v,i)=>v?`<span style="flex:${v};background:${cols[i]}" title="${lab[i]}: ${v}"></span>`:"").join("")}</div><div class="conf">${lab.map((l,i)=>dist[i]?`${l} ${dist[i]}`:"").filter(Boolean).join(" · ")}</div>`;}
+function priceBlock(t,sh){
+  const P=PRICES[t];if(!P)return"";
+  const old=daysOld(P.d),up=P.tg?((P.tg-P.p)/P.p*100):null;
+  const stale=old>5?`<span class="stale">kaina ${old} d. senumo</span>`:"";
+  let st="";
+  if(sh){const thr=sh.eps!=null?(sh.eps*1.10):null;
+    st=`<div><h4>Trumpuoju laikotarpiu</h4><p>${sh.week?"Ataskaita <b>šią savaitę</b>":"Kita ataskaita: <b>"+esc(sh.d||"—")+"</b>"}${sh.eps!=null?`. Analitikai tikisi pelno <b>${sh.eps.toFixed(2).replace(".",",")} $</b> vienai akcijai`:""}${sh.rev?`, pajamų ${esc(String(sh.rev).replace(".",","))}${/mlrd/.test(sh.rev)?"":" mlrd. $"}`:""}.</p>${thr?`<p class="conf">Pagal 10 % taisyklę akcija dažniau kyla, jei pelnas ≥ ${thr.toFixed(2).replace(".",",")} $.</p>`:""}</div>`;}
+  const lt=`<div><h4>Ilguoju laikotarpiu (12 mėn.)</h4><p><b>${esc(RLT[P.r]||P.r)}</b> · ${P.n} analitikai</p><p>Vidutinis tikslas <b>${money(P.tg)}</b>${up!=null?` (<b class="${up>=0?"tup":"tdn"}">${pct(up,0)}</b>)`:""}${P.lo!=null?`<br><span class="conf">Ribos: ${money(P.lo)} – ${money(P.hi)}</span>`:""}</p>${distBar(P.dist)}${P.note?`<p class="conf">${esc(P.note)}</p>`:""}</div>`;
+  return `<div class="pa"><div class="pa-row"><span class="pa-p">${money(P.p,2)}</span><span class="pill ${P.ch>0?"up":P.ch<0?"dn":"flat"}">${pct(P.ch,2)}</span><span class="conf">uždarymas ${P.d}</span>${stale}</div><div class="pa-grid">${st}${lt}</div></div>`;
+}
+function cryptoScore(c){return Math.max(15,Math.min(85,50+c.comp.reduce((a,x)=>a+x.d,0)));}
+function renderCrypto(){
+  const el=document.getElementById("cryptoCards");if(!el)return;
+  el.innerHTML=CRYPTO.map(c=>{const s=cryptoScore(c),old=daysOld(c.d);
+    const fromAth=c.ath?((c.p-c.ath)/c.ath*100):null;
+    return `<article class="card crypto">
+    <div class="hd"><div><div class="nm">${esc(c.n)}</div><div class="tk">${c.t} · ${c.live?`<b style="color:var(--bull)">gyvai ${c.live}</b>`:"kaina "+c.d}${!c.live&&old>2?` <span class="stale">${old} d. senumo</span>`:""}</div></div><span class="pill ${c.ch7>0?"up":"dn"}">7 d. ${pct(c.ch7,0)}</span></div>
+    <div class="pa-row"><span class="pa-p">${money(c.p,c.p>1000?0:2)}</span><span class="conf">per 24 val. ${pct(c.ch1)}${fromAth!=null?` · nuo rekordo ${pct(fromAth,0)}`:""}</span></div>
+    ${gaugeHTML("Trumpalaikis balas (1–2 sav.)",s,lean(s))}
+    <dl class="kv">${c.kv.map(([k,v])=>`<dt>${esc(k)}</dt><dd style="font-family:inherit">${esc(v)}</dd>`).join("")}</dl>
+    <div class="pa-grid">
+      <div><h4>Trumpuoju laikotarpiu</h4><ul class="bul">${c.short.map(([w,v])=>`<li><b>${esc(w)}:</b> ${esc(v)}</li>`).join("")}</ul></div>
+      <div><h4>Ilguoju laikotarpiu</h4><ul class="bul">${c.long.map(([w,v,x])=>`<li><b>${esc(w)}:</b> ${esc(v)}${x?` <span class="${x>=c.p?"tup":"tdn"}">(${pct((x-c.p)/c.p*100,0)})</span>`:""}</li>`).join("")}</ul></div>
+    </div>
+    <div><h4>Šią savaitę</h4><ul class="bul">${c.week.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+    <details><summary>Kodėl toks balas?</summary>
+      <div class="comp">${c.comp.map(x=>`<div><span class="d ${x.d>0?"p":x.d<0?"n":"z"}">${x.d>0?"+":""}${x.d}</span><span>${esc(x.t)}</span></div>`).join("")}</div>
+      <div class="pc" style="margin-top:8px"><div><h3>Kas palaiko</h3><ul class="bul">${c.pros.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div><div><h3>Kas kelia riziką</h3><ul class="bul">${c.cons.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div></div>
+      <div class="src" style="margin-top:6px">${c.srcs.map(([t,u])=>`<a href="${u}" target="_blank" rel="noopener">${esc(t)}</a>`).join("")}</div>
+    </details>
+  </article>`;}).join("");
+}
+function setDates(){const a=document.getElementById("dataDate");if(a)a.textContent=DATA_DATE;document.querySelectorAll("[data-upd]").forEach(e=>e.textContent=DATA_DATE);}
+function mergeBy(arr,items){(items||[]).forEach(it=>{const i=arr.findIndex(x=>x.t===it.t);if(i>=0)arr[i]=Object.assign({},arr[i],it);else arr.push(it);});}
+function replaceObj(o,n){Object.keys(o).forEach(k=>delete o[k]);Object.assign(o,n);}
+async function loadLive(){
+  try{
+    if(!(window.claude&&window.claude.use))return;
+    const db=await window.claude.use("db");if(!db)return;
+    const [a,b]=await Promise.all([db.doc("radar/live").get(),db.doc("radar/week").get()]);
+    applyData(a.exists?a.data():null,b.exists?b.data():null);
+  }catch(e){}
+}
+function applyData(L,W){
+    let ch=false;
+    if(L){if(L&&L.updated&&L.updated>=DATA_DATE){
+      if(L.prices)Object.assign(PRICES,L.prices);
+      if(L.next)Object.assign(NEXTQ,L.next);
+      if(L.crypto)mergeBy(CRYPTO,L.crypto);
+      if(L.majors)mergeBy(MAJORS,L.majors);
+      if(L.context)CONTEXT.splice(0,CONTEXT.length,...L.context);
+      DATA_DATE=L.updated;ch=true;}}
+    if(W){if(W&&W.updated&&W.updated>WEEK_DATE){
+      if(W.src)Object.assign(SRC,W.src);
+      if(W.events)EVENTS.splice(0,EVENTS.length,...W.events);
+      if(W.daynames)replaceObj(DAYNAMES,W.daynames);
+      if(W.daynotes)replaceObj(DAYNOTES,W.daynotes);
+      if(W.companies)COMPANIES.splice(0,COMPANIES.length,...W.companies);
+      if(W.label){const s=document.getElementById("weekLabel");if(s)s.textContent=W.label;}
+      if(W.openId)openId=W.openId;
+      WEEK_DATE=W.updated;ch=true;}}
+    if(ch){setDates();renderContext();renderDays();renderTriggers();renderCompanies();renderCrypto();
+      document.getElementById("compList").innerHTML=[...MAJORS,...COMPANIES].map(x=>`<option value="${esc(x.n)}">${x.t}</option>`).join("");}
+}
+/* Atskira svetainė: duomenys iš data.json + gyvos kripto kainos */
+async function loadSite(){
+  if(location.protocol!=="https:"&&location.protocol!=="http:")return;
+  try{const r=await fetch("data.json",{cache:"no-store"});if(r.ok){const j=await r.json();applyData(j.live||null,j.week||null);}}catch(e){}
+  liveCrypto();setInterval(liveCrypto,60000);
+}
+async function liveCrypto(){
+  try{const r=await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,solana&vs_currencies=usd&include_24hr_change=true");if(!r.ok)return;const j=await r.json();
+    const map={BTC:"bitcoin",SOL:"solana"},now=new Date(),d=now.toISOString().slice(0,10);
+    CRYPTO.forEach(c=>{const x=j[map[c.t]];if(x&&x.usd){c.p=x.usd;c.ch1=Math.round((x.usd_24h_change||0)*10)/10;c.d=d;c.live=now.toLocaleTimeString("lt-LT",{hour:"2-digit",minute:"2-digit"});}});
+    renderCrypto();}catch(e){}
+}
+
+function majorCheck(m){
+  if(m.eps==null||m.est==null||m.move==null)return null;
+  const s=(m.eps-m.est)/m.est*100,call=s>10?1:-1;
+  return{s,call,hit:Math.sign(m.move)===call};
+}
+function majorCard(m){
+  const ch=majorCheck(m);
+  const sTxt=m.eps!=null?`${m.eps.toFixed(2).replace(".",",")} vs ${m.est.toFixed(2).replace(".",",")} $ (${((m.eps-m.est)/m.est*100>0?"+":"")}${((m.eps-m.est)/m.est*100).toFixed(1).replace(".",",")} %)`:"—";
+  const mv=m.move==null?"—":`${m.move>0?"+":""}${String(m.move).replace(".",",")} %`;
+  const trig=ch?`<div class="verdict ${ch.hit?"up":"dn"}">10 % trigeris: ${ch.call>0?"rodė KILTI":"rodė KRISTI"} → ${ch.hit?"pasitvirtino ✓":"nepasitvirtino ✗"}</div>`:`<div class="verdict flat">10 % trigeris: nepakanka duomenų</div>`;
+  return `<article class="card">
+    <div class="hd"><div><div class="nm">${esc(m.n)}</div><div class="tk">${m.t} · ${esc(m.sec)}</div></div><span class="pill ${m.move==null?"flat":m.move>0?"up":"dn"}" title="Akcijos pokytis po paskutinės ataskaitos">${mv}</span></div>
+    ${priceBlock(m.t,NEXTQ[m.t]?Object.assign({},NEXTQ[m.t]):{d:m.next})}
+    <dl class="kv"><dt>Paskutinė ataskaita</dt><dd>${m.last}</dd><dt>Pelnas (EPS)</dt><dd>${sTxt}</dd><dt>Reakcija</dt><dd>${mv}</dd><dt>Pajamos</dt><dd>${esc(m.rev)}</dd></dl>
+    <div style="font-size:13.5px"><b>Prognozė:</b> ${esc(m.guide)}</div>
+    ${trig}
+    ${MAJOR_NOTES[m.t]?`<div class="conf">${esc(MAJOR_NOTES[m.t])}</div>`:""}
+    <div style="font-size:13.5px"><b>Ką stebėti kitą kartą:</b> ${esc(m.watch)}</div>
+    <details><summary>Kodėl akcija reagavo taip?</summary>
+      <p style="margin:0 0 6px">Kryptį po ataskaitos lemia ne tai, ar įmonė gera, o ar rezultatai ir <b>prognozė</b> viršijo tai, kas jau buvo įkainota.</p>
+      <div class="pc"><div><h3>Kas gerai</h3><ul class="bul">${m.pros.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div><div><h3>Kas kelia riziką</h3><ul class="bul">${m.cons.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div></div>
+      <div class="src" style="margin-top:6px">${m.srcs.map(([t,u])=>`<a href="${u}" target="_blank" rel="noopener">${esc(t)}</a>`).join("")}</div>
+    </details>
+  </article>`;
+}
+let compMode="major",compQuery="";
+function norm(s){return String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");}
+function renderCompanies(){
+  const q=norm(compQuery.trim());
+  const match=x=>!q||norm(x.n).includes(q)||norm(x.t).includes(q)||(x.al&&norm(x.al).includes(q));
+  document.querySelectorAll("[data-cm]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.cm===compMode));
+  const el=document.getElementById("cards"),msg=document.getElementById("compMsg");
+  let html="",found=0;
+  if(q){
+    const a=MAJORS.filter(match),b=COMPANIES.filter(match);
+    found=a.length+b.length;
+    html=a.map(majorCard).join("")+b.map(weeklyCard).join("");
+    document.getElementById("trigBox").hidden=true;
+  }else if(compMode==="major"){
+    html=MAJORS.map(majorCard).join("");found=MAJORS.length;document.getElementById("trigBox").hidden=false;
+  }else{
+    html=COMPANIES.map(weeklyCard).join("");found=COMPANIES.length;document.getElementById("trigBox").hidden=false;
+  }
+  el.innerHTML=html;
+  if(q&&!found){
+    msg.hidden=false;
+    msg.innerHTML=`<b>„${esc(compQuery)}“ sąraše nėra.</b> Parašyk man pokalbyje – pridėsiu su naujausiais duomenimis. ${sampleFn?`Arba <button class="btn ghost" id="askComp">paklausk DI dabar</button> <span class="conf">(DI neturi interneto, todėl atsakymas remsis jo žiniomis ir gali būti pasenęs)</span><div class="ai" id="aiComp" hidden></div>`:""}`;
+    const b=document.getElementById("askComp");if(b)b.onclick=()=>askCompany(compQuery,b);
+  }else msg.hidden=true;
+  el.querySelectorAll("[data-cc]").forEach(b=>b.onclick=()=>{
+    const t=b.dataset.cc;
+    compIn[t]={eps:num(document.getElementById("ce-"+t).value),rev:num(document.getElementById("cr-"+t).value),g:document.getElementById("cg-"+t).value||null};
+    store("radaras-comp",compIn);renderCompanies();
+  });
+}
+async function askCompany(name,btn){
+  const box=document.getElementById("aiComp");btn.disabled=true;box.hidden=false;box.textContent="DI galvoja…";
+  const prompt=`Atsakyk lietuviškai, trumpai ir atsargiai. Įmonė: "${name}". Remdamasis savo žiniomis (pasakyk, iki kada jos siekia), parašyk: 1) kuo įmonė užsiima; 2) 3 stiprybes; 3) 3 rizikas; 4) ką paprastai stebėti jos ataskaitose; 5) primink, kad viršijus pelno prognozę >10 % akcija dažniau kyla, o mažesnis viršijimas dažnai sukelia kritimą, ir kad svarbiausia – prognozė kitam ketvirčiui. Nesugalvok konkrečių naujausių skaičių, jei jų nežinai tiksliai.`;
+  try{const r=await sampleFn(prompt,{modelTier:"default",cache:false});box.textContent=(r.text||"").trim()||"DI negrąžino atsakymo.";}
+  catch(e){box.textContent="Nepavyko gauti DI atsakymo. Bandyk vėliau.";}
+  finally{btn.disabled=false;}
+}
+
+/* ================= 5 METŲ TESTAS ================= */
+function evalCpi(rows,kind){return rows.map(([d,c,a,m])=>{const s=sg(a-c);return{d,c,a,m,kind,surprise:s,hit:s===0?null:sg(m)===-s,small:Math.abs(m)<0.5};});}
+function evalNfp(rows,kind){return rows.map(([d,c,a,m])=>{const diff=a-c,s=Math.abs(diff)<40?0:sg(diff),reg=regime(d);return{d,c,a,m,kind,reg,surprise:s,hitF:s===0?null:sg(m)===-s,hitR:s===0?null:sg(m)===(reg==="inf"?-s:s)};});}
+function render5y(){
+  const cpi=[...evalCpi(CPI_A,"diena"),...evalCpi(CPI_B,"30 min")];
+  const nfp=[...evalNfp(NFP_A,"diena"),...evalNfp(NFP_B,"30 min")];
+  const cs=cpi.filter(x=>x.surprise!==0),ch=cs.filter(x=>x.hit).length,cn=cpi.filter(x=>x.surprise===0),cnS=cn.filter(x=>x.small).length;
+  const ns=nfp.filter(x=>x.surprise!==0),nF=ns.filter(x=>x.hitF).length,nR=ns.filter(x=>x.hitR).length;
+  let nb=0,nu=0;NVDA.forEach(([d,e,a,m])=>{if(a>e){nb++;if(m>0)nu++;}});
+  const pct=(a,b)=>Math.round(a/b*100)+" %";
+  document.getElementById("cpiHit").textContent=`${ch} iš ${cs.length} (${pct(ch,cs.length)})`;
+  document.getElementById("sum5").innerHTML=[
+    {k:"CPI staigmena → S&P 500 kryptis",v:`${ch} / ${cs.length}`,n:`${pct(ch,cs.length)} · patikimiausias signalas`},
+    {k:"CPI atitiko prognozę",v:`${cnS} / ${cn.length}`,n:"kartų rinka judėjo mažiau nei 0,5 %"},
+    {k:"NFP staigmena → S&P 500",v:`${nR} / ${ns.length}`,n:`${pct(nR,ns.length)} su režimu; ${nF} / ${ns.length} be jo`},
+    {k:"Nvidia viršijo EPS → akcija kilo",v:`${nu} / ${nb}`,n:`${pct(nu,nb)} · vien pelno neužtenka`}
+  ].map(c=>`<div class="ctx"><div class="k">${c.k}</div><div class="v mono">${c.v}</div><div class="n">${c.n}</div></div>`).join("");
+  const grp=(arr,f,key)=>{const m={};arr.filter(x=>x.surprise!==0).forEach(x=>{const k=f(x);m[k]=m[k]||{n:0,h:0};m[k].n++;if(x[key])m[k].h++;});return m;};
+  const rows=[];
+  const cA=grp(cpi,x=>x.d.slice(0,4),"hit");
+  Object.keys(cA).sort().forEach(y=>rows.push(["CPI",y,cA[y].n,cA[y].h,null]));
+  const nA=grp(nfp,x=>x.d.slice(0,4),"hitR"),nAF=grp(nfp,x=>x.d.slice(0,4),"hitF");
+  Object.keys(nA).sort().forEach(y=>rows.push(["NFP",y,nA[y].n,nA[y].h,nAF[y].h]));
+  document.getElementById("per5").innerHTML=`<thead><tr><th>Naujiena</th><th>Metai</th><th class="num">Staigmenų</th><th class="num">Kryptis atspėta</th><th class="num">NFP be režimo</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td class="mono">${r[1]}</td><td class="num mono">${r[2]}</td><td class="num mono">${r[3]} (${Math.round(r[3]/r[2]*100)} %)</td><td class="num mono">${r[4]==null?"—":r[4]}</td></tr>`).join("")}</tbody>`;
+  const mk=h=>h==null?`<span class="na">—</span>`:`<span class="${h?"ok":"bad"}">${h?"✓":"✗"}</span>`;
+  const f2=x=>String(x).replace(".",",");
+  document.getElementById("tblCpi").innerHTML=`<thead><tr><th>Data</th><th>Matas</th><th class="num">Konsensusas</th><th class="num">Faktas</th><th>Staigmena</th><th class="num">S&amp;P 500</th><th>Pataikė</th></tr></thead><tbody>${cpi.slice().reverse().map(x=>`<tr><td class="mono">${x.d}</td><td>${x.kind==="diena"?"bazinis metinis · diena":"bendras m/m · 30 min"}</td><td class="num mono">${f2(x.c)} %</td><td class="num mono">${f2(x.a)} %</td><td>${x.surprise>0?"karštesnis":x.surprise<0?"vėsesnis":"atitiko"}</td><td class="num mono">${x.m>0?"+":""}${f2(x.m)} %</td><td>${mk(x.hit)}</td></tr>`).join("")}</tbody>`;
+  document.getElementById("tblNfp").innerHTML=`<thead><tr><th>Data</th><th>Matas</th><th class="num">Konsensusas</th><th class="num">Faktas</th><th>Režimas</th><th class="num">S&amp;P 500</th><th>Su režimu</th><th>Be režimo</th></tr></thead><tbody>${nfp.slice().reverse().map(x=>`<tr><td class="mono">${x.d}</td><td>${x.kind}</td><td class="num mono">${x.c} tūkst.</td><td class="num mono">${x.a} tūkst.</td><td>${x.reg==="inf"?"infliacijos":"lėtėjimo"}</td><td class="num mono">${x.m>0?"+":""}${f2(x.m)} %</td><td>${x.surprise===0?`<span class="na">maža staigmena</span>`:mk(x.hitR)}</td><td>${mk(x.hitF)}</td></tr>`).join("")}</tbody>`;
+  document.getElementById("tblNvda").innerHTML=`<thead><tr><th>Data</th><th class="num">EPS prognozė</th><th class="num">EPS faktas</th><th>Rezultatas</th><th class="num">Akcija kitą dieną</th></tr></thead><tbody>${NVDA.slice().reverse().map(([d,e,a,m])=>`<tr><td class="mono">${d}</td><td class="num mono">${f2(e.toFixed(2))} $</td><td class="num mono">${f2(a.toFixed(2))} $</td><td>${a>e?"viršijo":a<e?"nepasiekė":"atitiko"}${d==="2025-05-28"?` <span class="flag">(šaltiniai nesutaria)</span>`:""}</td><td class="num mono ${m>0?"p":"n"}">${m>0?"+":""}${f2(m)} %</td></tr>`).join("")}</tbody>`;
+}
+
+/* ================= 2026 IŠSAMIAI ================= */
+function renderBacktest(){
+  let fx=0,fxN=0,st=0,stN=0,str=0,neu=0,neuN=0,pr=0,prN=0;
+  const mark=h=>h==null?`<span class="na">—</span>`:`<span class="${h?"ok":"bad"}">${h?"✓":"✗"}</span>`;
+  const rows=BACKTEST.map(r=>{
+    const z=r.cN!=null?(r.aN-r.cN)/r.typ:(r.z||0);
+    const scores=r.assets.map(x=>`<span class="mono">${esc(x.a)} ${fmt(clamp(50+x.d*z*18,10,90))}</span>`).join("<br>");
+    const hits=r.assets.map(x=>{const isSt=/S&P/.test(x.a);
+      if(r.neutral){if(x.hit!=null){neuN++;if(x.hit)neu++;}}else if(x.hit!=null){if(isSt){stN++;if(x.hit)st++;if(x.rHit??x.hit)str++;}else{fxN++;if(x.hit)fx++;}}
+      return `${mark(x.hit)} <span class="conf">${esc(x.a)}</span>`;}).join("<br>");
+    if(r.pre){prN++;if(r.pre.hit)pr++;}
+    return `<tr><td class="mono">${r.date}</td><td><b>${esc(r.ev)}</b>${r.note?`<br><span class="flag">${esc(r.note)}</span>`:""}</td><td class="mono">${esc(r.cons)}</td><td class="mono">${esc(r.act)}</td><td>${scores}</td><td>${esc(r.react)}</td><td>${hits}</td><td><a href="${r.u}" target="_blank" rel="noopener">šaltinis</a></td></tr>`;
+  }).join("");
+  document.getElementById("btTable").innerHTML=`<thead><tr><th>Data</th><th>Naujiena</th><th>Konsensusas</th><th>Faktas</th><th>Balas po</th><th>Rinkos reakcija</th><th>Pataikė?</th><th></th></tr></thead><tbody>${rows}</tbody>`;
+  document.getElementById("btSummary").innerHTML=[
+    {k:"Valiutos po staigmenos (2026)",v:`${fx} / ${fxN}`,n:"doleris, GBP, AUD, CAD"},
+    {k:"Akcijos po staigmenos (2026)",v:`${st} / ${stN}`,n:`su režimu ${str} / ${stN}`},
+    {k:"Be staigmenos",v:`${neu} / ${neuN}`,n:"Fed posėdžiuose judina tonas"},
+    {k:"Spėjimas prieš naujieną",v:`${pr} / ${prN}`,n:"beveik monetos metimas"}
+  ].map(c=>`<div class="ctx"><div class="k">${c.k}</div><div class="v mono">${c.v}</div><div class="n">${c.n}</div></div>`).join("");
+}
+
+/* ================= DI ================= */
+async function askAI(id,btn){
+  const ev=EVENTS.find(e=>e.id===id),box=document.getElementById("ai-"+id);
+  if(!sampleFn)return;
+  const a=actuals[id],c=ev.calc?(ev.calc.cons??consOver[id]):null;
+  const payload={naujiena:ev.title,laikas:ev.day+" "+ev.time+" (Vilnius)",konsensusas:ev.cons,specialistai:ev.fc||[],instrumentai:ev.instr,analize:ev.text,scenarijai:ev.scen||null,balai_pries:ev.scores,rinkos_kontekstas:CONTEXT,fed_rezimas:regimeNow==="inf"?"rinka bijo infliacijos, Fed kelia":"rinka bijo lėtėjimo, Fed mažina",faktas:a!=null?{rodiklis:ev.calc.label,faktas:a,konsensusas:c}:null};
+  const prompt=`Tu esi atsargus finansų rinkų analitikas. Atsakyk tik lietuviškai, paprastai ir trumpai.
+Duomenys (JSON): ${JSON.stringify(payload)}
+${a!=null?"Rezultatas paskelbtas: įvertink, ką jis reiškia pagal nuokrypį nuo konsensuso ir Fed režimą.":"Rezultatas dar nepaskelbtas: įvertink galimą reakciją."}
+Grąžink tik JSON: {"santrauka":"2–4 trumpi sakiniai","balai":[{"instrumentas":"...","balas":0-100,"kodel":"vienas sakinys"}],"rizika":"vienas sakinys"}
+Balas – tikimybė, kad instrumentas kils per kelias valandas. Prieš paskelbimą laikyk 15–85. Nesugalvok skaičių, kurių nėra duomenyse.`;
+  btn.disabled=true;box.hidden=false;box.textContent="DI analizuoja…";
+  try{
+    const r=await sampleFn(prompt,{modelTier:"default",cache:false});const t=r.text||"";let out=t;
+    try{const j=JSON.parse(t.slice(t.indexOf("{"),t.lastIndexOf("}")+1));out=(j.santrauka||"")+"\n\n"+(j.balai||[]).map(x=>`${x.instrumentas}: ${x.balas}/100 — ${x.kodel}`).join("\n")+(j.rizika?"\n\nRizika: "+j.rizika:"");}catch(e){}
+    box.textContent=out.trim()||"DI negrąžino atsakymo. Bandyk dar kartą.";
+  }catch(e){box.textContent=e&&e.code==="rate_limited"?"Per daug užklausų. Palauk minutę.":e&&e.code==="not_granted"?"DI naudojimas šiame puslapyje nepatvirtintas.":"Nepavyko gauti DI atsakymo. Bandyk vėliau.";}
+  finally{btn.disabled=false;}
+}
+
+/* ================= VALDYMAS ================= */
+const VIEWS=["kalendorius","imones","kripto","testas","metodas"];
+function setView(v){VIEWS.forEach(x=>{document.getElementById("view-"+x).hidden=x!==v;document.getElementById("tab-"+x).setAttribute("aria-selected",x===v);});}
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{setView(t.dataset.view);try{history.replaceState(null,"","#"+t.dataset.view);}catch(e){}});
+window.addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(VIEWS.includes(h))setView(h);});
+document.querySelectorAll("[data-imp]").forEach(b=>b.onclick=()=>{impFilter=+b.dataset.imp;document.querySelectorAll("[data-imp]").forEach(x=>x.setAttribute("aria-pressed",x===b));renderDays();});
+function setRegime(r){regimeNow=r;store("radaras-regime",r);document.querySelectorAll("[data-reg]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.reg===r));renderDays();}
+document.querySelectorAll("[data-reg]").forEach(b=>b.onclick=()=>setRegime(b.dataset.reg));
+setRegime(regimeNow);
+document.getElementById("compList").innerHTML=[...MAJORS,...COMPANIES].map(x=>`<option value="${esc(x.n)}">${x.t}</option>`).join("");
+document.getElementById("compSearch").addEventListener("input",e=>{compQuery=e.target.value;renderCompanies();});
+document.querySelectorAll("[data-cm]").forEach(b=>b.onclick=()=>{compMode=b.dataset.cm;compQuery="";document.getElementById("compSearch").value="";renderCompanies();});
+renderContext();renderCcy();renderDays();renderTriggers();renderCompanies();renderCrypto();setDates();render5y();renderBacktest();
+{const h=location.hash.slice(1);if(VIEWS.includes(h))setView(h);}
+loadLive();loadSite();
+(async()=>{try{if(window.claude&&window.claude.use){const s=await window.claude.use("sample");if(s){sampleFn=s;document.querySelectorAll("[data-ai-wrap]").forEach(e=>e.hidden=false);if(compQuery)renderCompanies();}}}catch(e){}})();
+</script>
+</body>
+</html>
