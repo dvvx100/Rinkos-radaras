@@ -1,0 +1,19 @@
+{
+ "updated": "2026-11-23 19:40",
+ "cons": {
+  "eu-pmi": 51.9,
+  "uk-pmi": 53.1
+ },
+ "actuals": {
+  "eu-pmi": 51.7,
+  "uk-pmi": 52.3,
+  "us-pmi": 54.7
+ },
+ "notes": {
+  "eu-pmi": "Euro zonos kompozitinis PMI 51,7 (prognozė 51,9, ankstesnis 51,7). Paslaugos 51,2 (51,8), pramonė 52,9 (52,8). Vokietija stipriai viršijo: 55,0 (53,3), Prancūzija nuvylė: 46,2 (48,1).",
+  "uk-pmi": "JK kompozitinis PMI 52,3 (prognozė 53,1, ankstesnis 52,9). Paslaugos 52,0 (53,0), pramonė 52,7 (53,0).",
+  "us-pmi": "JAV paslaugų PMI 54,7 (prognozė 55,6, ankstesnis 56,1). Kompozitinis 54,6 (ankstesnis 55,9), pramonė 54,5 (prognozė 54,5)."
+ },
+ "compres": {},
+ "compnotes": {}
+}
