@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-23 19:40",
+ "updated": "2026-11-23 23:42",
  "cons": {
   "eu-pmi": 51.9,
   "uk-pmi": 53.1
@@ -12,8 +12,25 @@
  "notes": {
   "eu-pmi": "Euro zonos kompozitinis PMI 51,7 (prognozė 51,9, ankstesnis 51,7). Paslaugos 51,2 (51,8), pramonė 52,9 (52,8). Vokietija stipriai viršijo: 55,0 (53,3), Prancūzija nuvylė: 46,2 (48,1).",
   "uk-pmi": "JK kompozitinis PMI 52,3 (prognozė 53,1, ankstesnis 52,9). Paslaugos 52,0 (53,0), pramonė 52,7 (53,0).",
-  "us-pmi": "JAV paslaugų PMI 54,7 (prognozė 55,6, ankstesnis 56,1). Kompozitinis 54,6 (ankstesnis 55,9), pramonė 54,5 (prognozė 54,5)."
+  "us-pmi": "JAV paslaugų PMI 54,7 (prognozė 55,6, ankstesnis 56,1). Kompozitinis 54,6 (ankstesnis 55,9), pramonė 54,5 (prognozė 54,5).",
+  "jp-hol": "Japonijos šventinė diena: Japonijos ir Kinijos rinkos buvo uždarytos, naujienų nebuvo.",
+  "williams": "Williamsas: infliacija per aukšta ir „dar yra darbo“; sprendimą gruodžio 8–9 d. priims pagal duomenis, 0,25 ar 0,5 p. p. žingsnio nekonkretizavo. Tikisi infliacijos 3,5 % 2026 m. pabaigoje ir 2 % tikslo tik 2028 m., rizikos – į viršų.",
+  "us-earn-mon": "HPE: koreguotas EPS 1,43 $ (prognozė 1,28 $), pajamos 14,5 mlrd. $ (14,4), gairės gerokai virš lūkesčių, bet akcija po uždarymo −2,4 %. Zoom: EPS 1,59 $ (1,49 $), pajamos 1,29 mlrd. $ (1,28), metinės gairės pakeltos, paskelbti pirmieji dividendai."
  },
- "compres": {},
- "compnotes": {}
+ "compres": {
+  "HPE": {
+   "eps": 1.43,
+   "rev": 14.5,
+   "g": "aukst"
+  },
+  "ZM": {
+   "eps": 1.59,
+   "rev": 1.29,
+   "g": "aukst"
+  }
+ },
+ "compnotes": {
+  "HPE": "EPS 1,43 $ (prognozė 1,28 $), pajamos 14,5 mlrd. $ (14,4 mlrd. $, +50 % per metus); I ketv. ir 2027 m. gairės gerokai viršijo lūkesčius (2027 m. EPS 5,05–5,35 $ vs 4,76 $), tačiau akcija po uždarymo krito 2,4 %.",
+  "ZM": "EPS 1,59 $ (prognozė 1,49 $), pajamos 1,29 mlrd. $ (1,28 mlrd. $); metinės gairės pakeltos (pajamos 5,10–5,11 mlrd. $, EPS 6,24–6,25 $), paskelbtas pirmasis 0,25 $ ketvirtinis dividendas."
+ }
 }
