@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-24 15:43",
+ "updated": "2026-11-24 17:44",
  "cons": {
   "eu-pmi": 51.9,
   "uk-pmi": 53.1,
@@ -9,7 +9,8 @@
   "eu-pmi": 51.7,
   "uk-pmi": 52.3,
   "us-pmi": 54.7,
-  "ifo": 90.6
+  "ifo": 90.6,
+  "cb": 103.3
  },
  "notes": {
   "eu-pmi": "Euro zonos kompozitinis PMI 51,7 (prognozė 51,9, ankstesnis 51,7). Paslaugos 51,2 (51,8), pramonė 52,9 (52,8). Vokietija stipriai viršijo: 55,0 (53,3), Prancūzija nuvylė: 46,2 (48,1).",
@@ -19,7 +20,8 @@
   "williams": "Williamsas: infliacija per aukšta ir „dar yra darbo“; sprendimą gruodžio 8–9 d. priims pagal duomenis, 0,25 ar 0,5 p. p. žingsnio nekonkretizavo. Tikisi infliacijos 3,5 % 2026 m. pabaigoje ir 2 % tikslo tik 2028 m., rizikos – į viršų.",
   "us-earn-mon": "HPE: koreguotas EPS 1,43 $ (prognozė 1,28 $), pajamos 14,5 mlrd. $ (14,4), gairės gerokai virš lūkesčių, bet akcija po uždarymo −2,4 %. Zoom: EPS 1,59 $ (1,49 $), pajamos 1,29 mlrd. $ (1,28), metinės gairės pakeltos, paskelbti pirmieji dividendai.",
   "ifo": "Ifo verslo klimatas 90,6 (prognozė 90,5, ankstesnis patikslintas 90,1) – aukščiausias nuo 2023 m. pavasario. Dabartinė padėtis 89,4 (88,8), lūkesčiai 91,9 (prognozė 92,0); paslaugos gerėjo, pramonė po šešių kilimų mėnesių susilpnėjo.",
-  "us-earn-tue-pre": "Analog Devices: EPS 4,06 $ (prognozė 3,88 $), pajamos 4,37 mlrd. $ (+42 %), bet I ketv. EPS gairės (3,82 $) žemiau lūkesčių – akcija prieš atidarymą −7,6 %. Best Buy: EPS 1,62 $ (1,49 $), palyginamieji pardavimai +6,1 % (2,3 %), metinės gairės pakeltos; Dollar Tree: EPS 1,16 $ (0,91 $), metinės EPS gairės 8,05–8,25 $ (7,94 $); Medtronic: EPS 1,34 $ (1,33 $), pajamos 9,36 mlrd. $ (9,48) – žemiau lūkesčių."
+  "us-earn-tue-pre": "Analog Devices: EPS 4,06 $ (prognozė 3,88 $), pajamos 4,37 mlrd. $ (+42 %), bet I ketv. EPS gairės (3,82 $) žemiau lūkesčių – akcija prieš atidarymą −7,6 %. Best Buy: EPS 1,62 $ (1,49 $), palyginamieji pardavimai +6,1 % (2,3 %), metinės gairės pakeltos; Dollar Tree: EPS 1,16 $ (0,91 $), metinės EPS gairės 8,05–8,25 $ (7,94 $); Medtronic: EPS 1,34 $ (1,33 $), pajamos 9,36 mlrd. $ (9,48) – žemiau lūkesčių.",
+  "cb": "Conference Board vartotojų pasitikėjimas šoktelėjo iki 103,3 (prognozė 92,5, ankstesnis patikslintas 91,9). Dabartinės padėties indeksas 132,8, lūkesčių – 83,6; CB tai sieja su mažesniu neapibrėžtumu po vidurio kadencijos rinkimų."
  },
  "compres": {
   "HPE": {
