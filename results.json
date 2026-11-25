@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-25 10:45",
+ "updated": "2026-11-25 15:50",
  "cons": {
   "eu-pmi": 51.9,
   "uk-pmi": 53.1,
@@ -13,7 +13,8 @@
   "ifo": 90.6,
   "cb": 103.3,
   "dell": 54.9,
-  "au-cpi": 4.9
+  "au-cpi": 4.9,
+  "pce": 0.3
  },
  "notes": {
   "eu-pmi": "Euro zonos kompozitinis PMI 51,7 (prognozė 51,9, ankstesnis 51,7). Paslaugos 51,2 (51,8), pramonė 52,9 (52,8). Vokietija stipriai viršijo: 55,0 (53,3), Prancūzija nuvylė: 46,2 (48,1).",
@@ -27,7 +28,8 @@
   "cb": "Conference Board vartotojų pasitikėjimas šoktelėjo iki 103,3 (prognozė 92,5, ankstesnis patikslintas 91,9). Dabartinės padėties indeksas 132,8, lūkesčių – 83,6; CB tai sieja su mažesniu neapibrėžtumu po vidurio kadencijos rinkimų.",
   "dell": "Dell pajamos 54,9 mlrd. $ (prognozė ~49,3 mlrd. $, +103 % per metus), koreguotas EPS 9,45 $ (6,59 $); DI užsakymų portfelis rekordinis – 132,3 mlrd. $, metų pajamų gairės pakeltos iki 202 mlrd. $, akcija po uždarymo kilo. HP: EPS 0,83 $ (0,75 $), pajamos 16,0 mlrd. $; Workday: EPS 2,82 $ (2,74 $), metinės prenumeratų gairės pakeltos; Autodesk: EPS 3,20 $ (3,07 $), metinės gairės pakeltos.",
   "boc": "Macklemas pristatė 2027–2031 m. pinigų politikos sistemą: 2 % infliacijos tikslas paliekamas, o pasaulio šokai, jo teigimu, greičiausiai bus didesni ir dažnesni. Rinkos komentatoriai (FXStreet) jo žodžius vertino kaip palūkanų kėlimo rizikos signalą dėl naftos kainų šoko keliamos infliacijos.",
-  "au-cpi": "Australijos spalio metinė infliacija pakilo iki 4,9 % (prognozė 4,7 %, ankstesnis 4,3 %) – aukščiausia nuo 2023 m.; per mėnesį +0,5 %. Bazinė (trimmed mean) – 3,8 % (prognozė 3,6 %, ankstesnis 3,6 %); AUD/USD reagavo nežymiai (+0,1 % iki ~0,665)."
+  "au-cpi": "Australijos spalio metinė infliacija pakilo iki 4,9 % (prognozė 4,7 %, ankstesnis 4,3 %) – aukščiausia nuo 2023 m.; per mėnesį +0,5 %. Bazinė (trimmed mean) – 3,8 % (prognozė 3,6 %, ankstesnis 3,6 %); AUD/USD reagavo nežymiai (+0,1 % iki ~0,665).",
+  "pce": "Bazinis PCE spalį +0,3 % m/m (prognozė 0,3 %), metinis 3,3 % (prognozė 3,2 %, ankstesnis 3,1 %); bendras PCE +0,3 % m/m, metinis 3,8 % (prognozė 3,8 %, ankstesnis 3,6 %). Asmeninės pajamos +0,7 %, taupymo norma 4,1 %; akcijų ateities sandoriai jau prieš skelbimą buvo žemiau ir po jo mažai pakito, 0,25 p. p. gruodžio kėlimo tikimybė ~94 %."
  },
  "compres": {
   "HPE": {
@@ -71,6 +73,11 @@
   "HPQ": {
    "eps": 0.83,
    "rev": 16.0
+  },
+  "DE": {
+   "eps": 3.89,
+   "rev": 10.51,
+   "g": "zem"
   }
  },
  "compnotes": {
@@ -82,6 +89,7 @@
   "DELL": "Koreguotas EPS 9,45 $ (prognozė 6,59 $), pajamos 54,9 mlrd. $ (49,3 mlrd. $, +103 %); IV ketv. gairės (pajamos ~56,3 mlrd. $, EPS 8,40 $) ir metų gairės (202 mlrd. $) virš lūkesčių, papildomas 25 mlrd. $ akcijų supirkimas – akcija po uždarymo kilo.",
   "WDAY": "Ne GAAP EPS 2,82 $ (prognozė 2,74 $), pajamos 2,705 mlrd. $ (2,69 mlrd. $, +11,2 %); IV ketv. prenumeratų gairės 2,60 mlrd. $, metinės pakeltos iki 9,958 mlrd. $.",
   "ADSK": "Ne GAAP EPS 3,20 $ (prognozė 3,07 $), pajamos 2,16 mlrd. $ (2,13 mlrd. $, +17 %); metinės gairės pakeltos (pajamos 8,36–8,375 mlrd. $, EPS 12,70–12,76 $), IV ketv. EPS gairės 3,21–3,26 $.",
-  "HPQ": "Koreguotas EPS 0,83 $ (prognozė 0,75 $), pajamos 16,0 mlrd. $ (15,47 mlrd. $, +9,3 %); 2027 fin. m. EPS gairės 3,15–3,45 $, I ketv. – 0,66–0,76 $, padidinti dividendai."
+  "HPQ": "Koreguotas EPS 0,83 $ (prognozė 0,75 $), pajamos 16,0 mlrd. $ (15,47 mlrd. $, +9,3 %); 2027 fin. m. EPS gairės 3,15–3,45 $, I ketv. – 0,66–0,76 $, padidinti dividendai.",
+  "DE": "EPS 3,89 $ (prognozė 4,07 $) – žemiau lūkesčių; įrangos segmentų pardavimai ~10,51 mlrd. $ (10,30 mlrd. $), visos pajamos 12,12 mlrd. $; 2027 fin. m. grynojo pelno gairės 4,50–5,25 mlrd. $ gerokai žemiau analitikų 5,91 mlrd. $, akcija prieš atidarymą krito ~2–4 %."
  }
 }
