@@ -1,9 +1,10 @@
 {
- "updated": "2026-11-24 23:55",
+ "updated": "2026-11-25 10:45",
  "cons": {
   "eu-pmi": 51.9,
   "uk-pmi": 53.1,
-  "ifo": 90.5
+  "ifo": 90.5,
+  "au-cpi": 4.7
  },
  "actuals": {
   "eu-pmi": 51.7,
@@ -11,7 +12,8 @@
   "us-pmi": 54.7,
   "ifo": 90.6,
   "cb": 103.3,
-  "dell": 54.9
+  "dell": 54.9,
+  "au-cpi": 4.9
  },
  "notes": {
   "eu-pmi": "Euro zonos kompozitinis PMI 51,7 (prognozė 51,9, ankstesnis 51,7). Paslaugos 51,2 (51,8), pramonė 52,9 (52,8). Vokietija stipriai viršijo: 55,0 (53,3), Prancūzija nuvylė: 46,2 (48,1).",
@@ -24,7 +26,8 @@
   "us-earn-tue-pre": "Analog Devices: EPS 4,06 $ (prognozė 3,88 $), pajamos 4,37 mlrd. $ (+42 %), bet I ketv. EPS gairės (3,82 $) žemiau lūkesčių – akcija prieš atidarymą −7,6 %. Best Buy: EPS 1,62 $ (1,49 $), palyginamieji pardavimai +6,1 % (2,3 %), metinės gairės pakeltos; Dollar Tree: EPS 1,16 $ (0,91 $), metinės EPS gairės 8,05–8,25 $ (7,94 $); Medtronic: EPS 1,34 $ (1,33 $), pajamos 9,36 mlrd. $ (9,48) – žemiau lūkesčių.",
   "cb": "Conference Board vartotojų pasitikėjimas šoktelėjo iki 103,3 (prognozė 92,5, ankstesnis patikslintas 91,9). Dabartinės padėties indeksas 132,8, lūkesčių – 83,6; CB tai sieja su mažesniu neapibrėžtumu po vidurio kadencijos rinkimų.",
   "dell": "Dell pajamos 54,9 mlrd. $ (prognozė ~49,3 mlrd. $, +103 % per metus), koreguotas EPS 9,45 $ (6,59 $); DI užsakymų portfelis rekordinis – 132,3 mlrd. $, metų pajamų gairės pakeltos iki 202 mlrd. $, akcija po uždarymo kilo. HP: EPS 0,83 $ (0,75 $), pajamos 16,0 mlrd. $; Workday: EPS 2,82 $ (2,74 $), metinės prenumeratų gairės pakeltos; Autodesk: EPS 3,20 $ (3,07 $), metinės gairės pakeltos.",
-  "boc": "Macklemas pristatė 2027–2031 m. pinigų politikos sistemą: 2 % infliacijos tikslas paliekamas, o pasaulio šokai, jo teigimu, greičiausiai bus didesni ir dažnesni. Rinkos komentatoriai (FXStreet) jo žodžius vertino kaip palūkanų kėlimo rizikos signalą dėl naftos kainų šoko keliamos infliacijos."
+  "boc": "Macklemas pristatė 2027–2031 m. pinigų politikos sistemą: 2 % infliacijos tikslas paliekamas, o pasaulio šokai, jo teigimu, greičiausiai bus didesni ir dažnesni. Rinkos komentatoriai (FXStreet) jo žodžius vertino kaip palūkanų kėlimo rizikos signalą dėl naftos kainų šoko keliamos infliacijos.",
+  "au-cpi": "Australijos spalio metinė infliacija pakilo iki 4,9 % (prognozė 4,7 %, ankstesnis 4,3 %) – aukščiausia nuo 2023 m.; per mėnesį +0,5 %. Bazinė (trimmed mean) – 3,8 % (prognozė 3,6 %, ankstesnis 3,6 %); AUD/USD reagavo nežymiai (+0,1 % iki ~0,665)."
  },
  "compres": {
   "HPE": {
