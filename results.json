@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-25 17:45",
+ "updated": "2026-11-25 23:45",
  "cons": {
   "eu-pmi": 51.9,
   "uk-pmi": 53.1,
@@ -31,7 +31,8 @@
   "boc": "Macklemas pristatė 2027–2031 m. pinigų politikos sistemą: 2 % infliacijos tikslas paliekamas, o pasaulio šokai, jo teigimu, greičiausiai bus didesni ir dažnesni. Rinkos komentatoriai (FXStreet) jo žodžius vertino kaip palūkanų kėlimo rizikos signalą dėl naftos kainų šoko keliamos infliacijos.",
   "au-cpi": "Australijos spalio metinė infliacija pakilo iki 4,9 % (prognozė 4,7 %, ankstesnis 4,3 %) – aukščiausia nuo 2023 m.; per mėnesį +0,5 %. Bazinė (trimmed mean) – 3,8 % (prognozė 3,6 %, ankstesnis 3,6 %); AUD/USD reagavo nežymiai (+0,1 % iki ~0,665).",
   "pce": "Bazinis PCE spalį +0,3 % m/m (prognozė 0,3 %), metinis 3,3 % (prognozė 3,2 %, ankstesnis 3,1 %); bendras PCE +0,3 % m/m, metinis 3,8 % (prognozė 3,8 %, ankstesnis 3,6 %). Asmeninės pajamos +0,7 %, taupymo norma 4,1 %; akcijų ateities sandoriai jau prieš skelbimą buvo žemiau ir po jo mažai pakito, 0,25 p. p. gruodžio kėlimo tikimybė ~94 %.",
-  "nhs": "JAV naujų namų pardavimai spalį pakilo 14,2 % iki 701 tūkst. metiniu tempu (prognozė ~649–650 tūkst.), tačiau rugsėjo duomenys patikslinti gerokai žemyn – iki 614 tūkst. (buvo 676 tūkst.). Medianinė kaina 391 300 $ (−3,2 % per metus), pasiūla – 8,0 mėn."
+  "nhs": "JAV naujų namų pardavimai spalį pakilo 14,2 % iki 701 tūkst. metiniu tempu (prognozė ~649–650 tūkst.), tačiau rugsėjo duomenys patikslinti gerokai žemyn – iki 614 tūkst. (buvo 676 tūkst.). Medianinė kaina 391 300 $ (−3,2 % per metus), pasiūla – 8,0 mėn.",
+  "beige": "Fed „Beige Book“: aktyvumas augo 8 iš 12 apygardų (lėtai–vidutiniškai), keturiose nepakito; vartojimas beveik nepakito, NT ir statybos silpo. Atlyginimai kilo vidutiniškai (spartėjo nuo nedidelio), kainos kilo vidutiniškai kaip ir anksčiau, sąnaudos (energija, tarifai) augo sparčiau nei pardavimo kainos – švelnėjimo argumentų mažai."
  },
  "compres": {
   "HPE": {
