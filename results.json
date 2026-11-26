@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-26 10:50",
+ "updated": "2026-11-26 15:41",
  "cons": {
   "eu-pmi": 51.9,
   "uk-pmi": 53.1,
@@ -36,7 +36,8 @@
   "beige": "Fed „Beige Book“: aktyvumas augo 8 iš 12 apygardų (lėtai–vidutiniškai), keturiose nepakito; vartojimas beveik nepakito, NT ir statybos silpo. Atlyginimai kilo vidutiniškai (spartėjo nuo nedidelio), kainos kilo vidutiniškai kaip ir anksčiau, sąnaudos (energija, tarifai) augo sparčiau nei pardavimo kainos – švelnėjimo argumentų mažai.",
   "bok": "Pietų Korėjos bankas, kaip ir tikėtasi, pakėlė bazinę palūkanų normą 0,25 p. p. iki 3,25 % (buvo 3,00 %) – aukščiausia nuo 2024 m. BVP prognozės smarkiai pakeltos: 2026 m. 3,9 % (buvo 3,3 %), 2027 m. 4,1 % (buvo 2,9 %); 2027 m. infliacijos prognozė 2,4 %.",
   "gfk": "Vokietijos GfK vartotojų nuotaikos gruodžiui –30,2 (prognozė –29,0, ankstesnis patikslintas –30,9) – šiek tiek pagerėjo, bet nepasiekė lūkesčių. Pajamų lūkesčiai pagerėjo (–13,9), ekonomikos lūkesčiai nukrito iki –1,6, kainų lūkesčiai kilo.",
-  "us-hol": "JAV Padėkos diena: JAV akcijų ir obligacijų rinkos uždarytos, svarbių JAV duomenų nėra; forex likvidumas mažas."
+  "us-hol": "JAV Padėkos diena: JAV akcijų ir obligacijų rinkos uždarytos, svarbių JAV duomenų nėra; forex likvidumas mažas.",
+  "ecb-min": "ECB spalio 28–29 d. posėdžio protokolas: „didelis skaičius narių“ teigė, kad duomenys patvirtino tolesnio griežtinimo poreikį ir jie galėjo paremti kėlimą jau spalį, bet palūkanos palikta nepakeistos, laukiant daugiau įrodymų. Infliacija gali būti aukštesnė nei manyta (energijos kainos gerokai virš bazinio scenarijaus), todėl 0,25 p. p. kėlimas gruodžio 17 d. laikomas beveik neabejotinu."
  },
  "compres": {
   "HPE": {
