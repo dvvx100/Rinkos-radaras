@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-25 23:45",
+ "updated": "2026-11-26 10:50",
  "cons": {
   "eu-pmi": 51.9,
   "uk-pmi": 53.1,
@@ -15,7 +15,8 @@
   "dell": 54.9,
   "au-cpi": 4.9,
   "pce": 0.3,
-  "nhs": 701
+  "nhs": 701,
+  "bok": 0.25
  },
  "notes": {
   "eu-pmi": "Euro zonos kompozitinis PMI 51,7 (prognozė 51,9, ankstesnis 51,7). Paslaugos 51,2 (51,8), pramonė 52,9 (52,8). Vokietija stipriai viršijo: 55,0 (53,3), Prancūzija nuvylė: 46,2 (48,1).",
@@ -32,7 +33,10 @@
   "au-cpi": "Australijos spalio metinė infliacija pakilo iki 4,9 % (prognozė 4,7 %, ankstesnis 4,3 %) – aukščiausia nuo 2023 m.; per mėnesį +0,5 %. Bazinė (trimmed mean) – 3,8 % (prognozė 3,6 %, ankstesnis 3,6 %); AUD/USD reagavo nežymiai (+0,1 % iki ~0,665).",
   "pce": "Bazinis PCE spalį +0,3 % m/m (prognozė 0,3 %), metinis 3,3 % (prognozė 3,2 %, ankstesnis 3,1 %); bendras PCE +0,3 % m/m, metinis 3,8 % (prognozė 3,8 %, ankstesnis 3,6 %). Asmeninės pajamos +0,7 %, taupymo norma 4,1 %; akcijų ateities sandoriai jau prieš skelbimą buvo žemiau ir po jo mažai pakito, 0,25 p. p. gruodžio kėlimo tikimybė ~94 %.",
   "nhs": "JAV naujų namų pardavimai spalį pakilo 14,2 % iki 701 tūkst. metiniu tempu (prognozė ~649–650 tūkst.), tačiau rugsėjo duomenys patikslinti gerokai žemyn – iki 614 tūkst. (buvo 676 tūkst.). Medianinė kaina 391 300 $ (−3,2 % per metus), pasiūla – 8,0 mėn.",
-  "beige": "Fed „Beige Book“: aktyvumas augo 8 iš 12 apygardų (lėtai–vidutiniškai), keturiose nepakito; vartojimas beveik nepakito, NT ir statybos silpo. Atlyginimai kilo vidutiniškai (spartėjo nuo nedidelio), kainos kilo vidutiniškai kaip ir anksčiau, sąnaudos (energija, tarifai) augo sparčiau nei pardavimo kainos – švelnėjimo argumentų mažai."
+  "beige": "Fed „Beige Book“: aktyvumas augo 8 iš 12 apygardų (lėtai–vidutiniškai), keturiose nepakito; vartojimas beveik nepakito, NT ir statybos silpo. Atlyginimai kilo vidutiniškai (spartėjo nuo nedidelio), kainos kilo vidutiniškai kaip ir anksčiau, sąnaudos (energija, tarifai) augo sparčiau nei pardavimo kainos – švelnėjimo argumentų mažai.",
+  "bok": "Pietų Korėjos bankas, kaip ir tikėtasi, pakėlė bazinę palūkanų normą 0,25 p. p. iki 3,25 % (buvo 3,00 %) – aukščiausia nuo 2024 m. BVP prognozės smarkiai pakeltos: 2026 m. 3,9 % (buvo 3,3 %), 2027 m. 4,1 % (buvo 2,9 %); 2027 m. infliacijos prognozė 2,4 %.",
+  "gfk": "Vokietijos GfK vartotojų nuotaikos gruodžiui –30,2 (prognozė –29,0, ankstesnis patikslintas –30,9) – šiek tiek pagerėjo, bet nepasiekė lūkesčių. Pajamų lūkesčiai pagerėjo (–13,9), ekonomikos lūkesčiai nukrito iki –1,6, kainų lūkesčiai kilo.",
+  "us-hol": "JAV Padėkos diena: JAV akcijų ir obligacijų rinkos uždarytos, svarbių JAV duomenų nėra; forex likvidumas mažas."
  },
  "compres": {
   "HPE": {
