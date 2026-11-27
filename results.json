@@ -1,10 +1,11 @@
 {
- "updated": "2026-11-26 15:41",
+ "updated": "2026-11-27 10:50",
  "cons": {
   "eu-pmi": 51.9,
   "uk-pmi": 53.1,
   "ifo": 90.5,
-  "au-cpi": 4.7
+  "au-cpi": 4.7,
+  "fr-es-cpi": 3.2
  },
  "actuals": {
   "eu-pmi": 51.7,
@@ -16,7 +17,9 @@
   "au-cpi": 4.9,
   "pce": 0.3,
   "nhs": 701,
-  "bok": 0.25
+  "bok": 0.25,
+  "tokyo": 2.9,
+  "fr-es-cpi": 2.9
  },
  "notes": {
   "eu-pmi": "Euro zonos kompozitinis PMI 51,7 (prognozė 51,9, ankstesnis 51,7). Paslaugos 51,2 (51,8), pramonė 52,9 (52,8). Vokietija stipriai viršijo: 55,0 (53,3), Prancūzija nuvylė: 46,2 (48,1).",
@@ -37,7 +40,10 @@
   "bok": "Pietų Korėjos bankas, kaip ir tikėtasi, pakėlė bazinę palūkanų normą 0,25 p. p. iki 3,25 % (buvo 3,00 %) – aukščiausia nuo 2024 m. BVP prognozės smarkiai pakeltos: 2026 m. 3,9 % (buvo 3,3 %), 2027 m. 4,1 % (buvo 2,9 %); 2027 m. infliacijos prognozė 2,4 %.",
   "gfk": "Vokietijos GfK vartotojų nuotaikos gruodžiui –30,2 (prognozė –29,0, ankstesnis patikslintas –30,9) – šiek tiek pagerėjo, bet nepasiekė lūkesčių. Pajamų lūkesčiai pagerėjo (–13,9), ekonomikos lūkesčiai nukrito iki –1,6, kainų lūkesčiai kilo.",
   "us-hol": "JAV Padėkos diena: JAV akcijų ir obligacijų rinkos uždarytos, svarbių JAV duomenų nėra; forex likvidumas mažas.",
-  "ecb-min": "ECB spalio 28–29 d. posėdžio protokolas: „didelis skaičius narių“ teigė, kad duomenys patvirtino tolesnio griežtinimo poreikį ir jie galėjo paremti kėlimą jau spalį, bet palūkanos palikta nepakeistos, laukiant daugiau įrodymų. Infliacija gali būti aukštesnė nei manyta (energijos kainos gerokai virš bazinio scenarijaus), todėl 0,25 p. p. kėlimas gruodžio 17 d. laikomas beveik neabejotinu."
+  "ecb-min": "ECB spalio 28–29 d. posėdžio protokolas: „didelis skaičius narių“ teigė, kad duomenys patvirtino tolesnio griežtinimo poreikį ir jie galėjo paremti kėlimą jau spalį, bet palūkanos palikta nepakeistos, laukiant daugiau įrodymų. Infliacija gali būti aukštesnė nei manyta (energijos kainos gerokai virš bazinio scenarijaus), todėl 0,25 p. p. kėlimas gruodžio 17 d. laikomas beveik neabejotinu.",
+  "tokyo": "Tokijo bazinė (be šviežio maisto) lapkričio infliacija pakilo iki 2,9 % (prognozė 3,0 %, ankstesnis 2,6 %) – sparčiausiai nuo 2025 m. liepos. Bendra 2,8 % (prognozė 3,0 %, ankstesnis 2,7 %), be maisto ir energijos – 2,5 % (prognozė 2,7 %); energija brango 9,5 % per metus.",
+  "cn-prof": "Kinijos pramonės pelnas spalį išaugo 20,1 % per metus (rugsėjį 14,4 %) – sparčiausiai per kelis mėnesius; per sausį–spalį +16 % (po devynių mėnesių 15,5 %). Augimą lėmė elektronika (DI paklausa), vartojimo sektoriai silpo.",
+  "fr-es-cpi": "Infliacija gerokai lėtesnė nei tikėtasi: Prancūzijos CPI 2,9 % (prognozė 3,2 %, ankstesnis 3,4 %), SVKI 3,2 % (3,6 %, ankstesnis 3,7 %). Ispanijos CPI ir SVKI – 4,1 % (SVKI prognozė 4,7 %, ankstesnis 4,9 %), bazinė 2,6 % (3,2 %); lėtėjimą lėmė pigesnė energija."
  },
  "compres": {
   "HPE": {
