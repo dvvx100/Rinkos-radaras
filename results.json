@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-27 10:50",
+ "updated": "2026-11-27 12:45",
  "cons": {
   "eu-pmi": 51.9,
   "uk-pmi": 53.1,
@@ -43,7 +43,8 @@
   "ecb-min": "ECB spalio 28–29 d. posėdžio protokolas: „didelis skaičius narių“ teigė, kad duomenys patvirtino tolesnio griežtinimo poreikį ir jie galėjo paremti kėlimą jau spalį, bet palūkanos palikta nepakeistos, laukiant daugiau įrodymų. Infliacija gali būti aukštesnė nei manyta (energijos kainos gerokai virš bazinio scenarijaus), todėl 0,25 p. p. kėlimas gruodžio 17 d. laikomas beveik neabejotinu.",
   "tokyo": "Tokijo bazinė (be šviežio maisto) lapkričio infliacija pakilo iki 2,9 % (prognozė 3,0 %, ankstesnis 2,6 %) – sparčiausiai nuo 2025 m. liepos. Bendra 2,8 % (prognozė 3,0 %, ankstesnis 2,7 %), be maisto ir energijos – 2,5 % (prognozė 2,7 %); energija brango 9,5 % per metus.",
   "cn-prof": "Kinijos pramonės pelnas spalį išaugo 20,1 % per metus (rugsėjį 14,4 %) – sparčiausiai per kelis mėnesius; per sausį–spalį +16 % (po devynių mėnesių 15,5 %). Augimą lėmė elektronika (DI paklausa), vartojimo sektoriai silpo.",
-  "fr-es-cpi": "Infliacija gerokai lėtesnė nei tikėtasi: Prancūzijos CPI 2,9 % (prognozė 3,2 %, ankstesnis 3,4 %), SVKI 3,2 % (3,6 %, ankstesnis 3,7 %). Ispanijos CPI ir SVKI – 4,1 % (SVKI prognozė 4,7 %, ankstesnis 4,9 %), bazinė 2,6 % (3,2 %); lėtėjimą lėmė pigesnė energija."
+  "fr-es-cpi": "Infliacija gerokai lėtesnė nei tikėtasi: Prancūzijos CPI 2,9 % (prognozė 3,2 %, ankstesnis 3,4 %), SVKI 3,2 % (3,6 %, ankstesnis 3,7 %). Ispanijos CPI ir SVKI – 4,1 % (SVKI prognozė 4,7 %, ankstesnis 4,9 %), bazinė 2,6 % (3,2 %); lėtėjimą lėmė pigesnė energija.",
+  "ez-esi": "Euro zonos ekonominių nuotaikų indeksas (ESI) lapkritį nukrito iki 95,8 (prognozė 97,2, ankstesnis 96,5) – žemiausias nuo birželio, mažėjo trečią mėnesį iš eilės. Pramonės pasitikėjimas –5,1 (–3,6), vartotojų –16,9 (–17,9)."
  },
  "compres": {
   "HPE": {
