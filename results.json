@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-27 15:42",
+ "updated": "2026-11-27 23:44",
  "cons": {
   "eu-pmi": 51.9,
   "uk-pmi": 53.1,
@@ -45,7 +45,8 @@
   "cn-prof": "Kinijos pramonės pelnas spalį išaugo 20,1 % per metus (rugsėjį 14,4 %) – sparčiausiai per kelis mėnesius; per sausį–spalį +16 % (po devynių mėnesių 15,5 %). Augimą lėmė elektronika (DI paklausa), vartojimo sektoriai silpo.",
   "fr-es-cpi": "Infliacija gerokai lėtesnė nei tikėtasi: Prancūzijos CPI 2,9 % (prognozė 3,2 %, ankstesnis 3,4 %), SVKI 3,2 % (3,6 %, ankstesnis 3,7 %). Ispanijos CPI ir SVKI – 4,1 % (SVKI prognozė 4,7 %, ankstesnis 4,9 %), bazinė 2,6 % (3,2 %); lėtėjimą lėmė pigesnė energija.",
   "ez-esi": "Euro zonos ekonominių nuotaikų indeksas (ESI) lapkritį nukrito iki 95,8 (prognozė 97,2, ankstesnis 96,5) – žemiausias nuo birželio, mažėjo trečią mėnesį iš eilės. Pramonės pasitikėjimas –5,1 (–3,6), vartotojų –16,9 (–17,9).",
-  "us-fri": "JAV spalio prekių prekybos deficitas išaugo iki 149,5 mlrd. $ (prognozė −133,0 mlrd. $, ankstesnis −135,9 mlrd. $) – neigiamas signalas IV ketv. BVP. Didmeninės atsargos +0,9 % (ankstesnis +0,8 %), mažmeninės be automobilių +0,6 % (+0,7 %) iš dalies kompensuoja prekybos poveikį."
+  "us-fri": "JAV spalio prekių prekybos deficitas išaugo iki 149,5 mlrd. $ (prognozė −133,0 mlrd. $, ankstesnis −135,9 mlrd. $) – neigiamas signalas IV ketv. BVP. Didmeninės atsargos +0,9 % (ankstesnis +0,8 %), mažmeninės be automobilių +0,6 % (+0,7 %) iš dalies kompensuoja prekybos poveikį.",
+  "france-sp": "S&P paliko Prancūzijos kredito reitingą A+/A-1, bet pablogino perspektyvą iš stabilios į neigiamą. Priežastys – silpnas ekonomikos augimas ir didėjančios skolinimosi sąnaudos, apsunkinančios biudžeto deficito mažinimą."
  },
  "compres": {
   "HPE": {
